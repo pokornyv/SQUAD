@@ -16,12 +16,14 @@ ordered list:
 2. item
 3. item
 
-link: [homepage](www.fzu.cz/~pokornyv)
+link: [homepage](http://www.fzu.cz/~pokornyv)
 
 *italic* _italic_ **bold** ~~through~~ **bold with *italic* text**
 
 Quote:
 > Let them eat cake!
+
+inline code: `f = lambda x: x**2-2*x+3`
 
 ```python
 import scipy as sp
@@ -31,9 +33,10 @@ print(sp.pi)
 task list:
 - [x] done
 - [x] also done
-- [ ] not done \*asterisk\* \*hash mark\*
+- [ ] not done \*literal asterisk\* \*literal hash mark\*
 
 table:
+
 1st column | 2nd column
 -----------|-----------
 1 | 2

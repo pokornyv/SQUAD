@@ -14,4 +14,3 @@ SQUAD (**su**perconducting **qua**ntum **d**ot is a small python code that allow
 **References:**
 - M. Žonda, V. Pokorný, V. Janiš and T. Novotný, Phys. Rev. B 93, 024523 (2016).
 - M. Žonda, V. Pokorný, V. Janiš and T. Novotný, Sci. Rep. 5, 8821 (2015).
-- 

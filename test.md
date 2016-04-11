@@ -19,5 +19,22 @@ ordered list:
 link: [homepage](www.fzu.cz/~pokornyv)
 
 *italic* _italic_ **bold** ~~through~~ **bold with *italic* text**
+
 Quote:
 > Let them eat cake!
+
+```python
+import scipy as sp
+print(sp.pi)
+```
+
+task list:
+-[x] done
+-[x] also done
+-[ ] not done
+
+table:
+1st column | 2nd column
+-----------|-----------
+1 | 2
+3 | 4

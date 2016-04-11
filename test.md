@@ -34,7 +34,7 @@ print(sp.pi)
 task list:
 - [x] done
 - [x] also done
-- [ ] not done \*literal asterisk\* \*literal hash mark\*
+- [ ] not done \* \# \( \- \)
 
 table:
 

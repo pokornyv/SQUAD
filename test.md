@@ -16,4 +16,8 @@ ordered list:
 2. item
 3. item
 
-link: [homepage]www.fzu.cz/~pokornyv
+link: [homepage](www.fzu.cz/~pokornyv)
+
+*italic* _italic_ **bold** ~~through~~ **bold with *italic* text**
+Quote:
+> Let them eat cake!

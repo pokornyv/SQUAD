@@ -29,9 +29,9 @@ print(sp.pi)
 ```
 
 task list:
--[x] done
--[x] also done
--[ ] not done
+- [x] done
+- [x] also done
+- [ ] not done \*asterisk\* \*hash mark\*
 
 table:
 1st column | 2nd column

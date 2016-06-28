@@ -9,8 +9,9 @@ from scipy.integrate import simps
 #####################################################################
 # general functions #################################################
 
-HeavisideTheta=lambda x: (sp.sign(x)+1.0)/2.0
-FermiDirac=lambda x: (sp.sign(-x)+1.0)/2.0
+HeavisideTheta = lambda x: (sp.sign(x)+1.0)/2.0
+FermiDirac     = lambda E,T: 1.0/(sp.exp((E+1e-12)/T)+1.0)
+BoseEinstein   = lambda E,T: 1.0/(sp.exp((E+1e-12)/T)-1.0)
 
 def KondoTemperature(U,Gamma,eps):
 	"""	calculating Kondo temperature sqrt(U*Gamma/2)*exp[pi*abs(U**2-4*eps**2)/(8*U*Gamma)]	"""
@@ -20,11 +21,18 @@ def KondoTemperature(U,Gamma,eps):
 		print "# Warning: KondoTemperature: Kondo temperature not defined."
 		return -1.0
 
-def FillEnergies(Emin,Emax,dE):
+def FillEnergiesLinear(Emin,Emax,dE):
 	"""	returns the array of energies [Emin,Emin+dE,...,Emax-dE,Emax) """
 	En_F = sp.arange(Emin,Emax,dE)
 	En_F = sp.around(En_F,int(-sp.log10(dE)))
 	return En_F
+
+def FillEnergies(dE,N):
+	"""	returns the symmetric array of energies 
+	[Emin,Emin+dE,...,0,...,-Emin-dE,-Emin] of length N """
+	dE_dec = int(-sp.log10(dE))
+	En_F = sp.linspace(-(N-1)/2*dE,(N-1)/2*dE,N)
+	return sp.around(En_F,dE_dec+2)
 
 def FillEnergies2(dE,N):
 	"""	returns the symmetric array of energies [Emin,Emin+dE,...,-Emin-dE,-Emin] """
@@ -223,7 +231,7 @@ def SolveHF(U,Delta,GammaR,GammaL,eps,P):
 	# filling the arrays ######################################
 	dE = 1e-4							# band energy sampling
 	Emin = -100.0						# lower cutoff for band energy
-	En_F = FillEnergies(Emin,-Delta,dE)	# [Emin:-Delta)
+	En_F = FillEnergiesLinear(Emin,-Delta,dE)	# [Emin:-Delta)
 	# initial conditions ######################################
 	from scipy.optimize import fixed_point
 	Phi = P*sp.pi

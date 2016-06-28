@@ -25,7 +25,7 @@ except IndexError: chat = 1	# 1 = write progress lines to standard output
 
 #print '{0: .14f} {1: .14f}'.format(GammaR,GammaL)
 
-WriteOut = 1				# 1 = write datafiles
+WriteOut = 0				# 1 = write datafiles
 ed  = eps-U/2.0				# localized energy level shifted to symmetry point
 Phi = P*sp.pi
 Conv = 2e-4					# convergence criterium for n and mu
@@ -42,11 +42,11 @@ FitMax = 30.0
 # hit the limit of 9223372036854775808 == 2**63 of signed int
 # large values of N also introduce instability to calcualtion of ABS
 
-N  = 2**20-1				# number of points for bubble/self-energy fft calculation
+N  = 2**19-1				# number of points for bubble/self-energy fft calculation
 dE = 1e-4
 dE_dec = int(-sp.log10(dE))
 En_F   = FillEnergies2(dE,N)
-EminExp = 100			# maximum of the frequency range for outputs
+EminExp = 10			# maximum of the frequency range for outputs
 SEtype  = 'sc2nd'		# identifier for output files
 
 #rootf = 'fixed_point'	# root finding algorithm for density iterations # fixed point is not tested!!!

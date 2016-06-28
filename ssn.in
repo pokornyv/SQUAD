@@ -1,0 +1,33 @@
+;M           energy axis contains 2**M-1 points
+;dE          energy step
+;rootf       method of finding n and mu in self-consitent loop
+;ConvN       convergence criterium for n amd mu
+;ConvX       convergence criterium for brentq/fixed_point
+;ConvHF      convergence criterium for HF equations
+;MuMin       lower limit of mu for bisection
+;MuMax       upper limit of mu for bisection
+;WriteIO     write to screen?
+;WriteFiles  write data files?
+;EmaxFiles   frequency range for output
+;EstepFiles  energy step in output files is EstepFiles x dE
+;offset_x    offset of energies to avoid poles at gap edges
+
+[params]
+
+M           :  20
+dE          :  1e-4
+
+rootf       :  brentq
+;rootf       :  fixed_point
+ConvN       :  1e-4
+ConvX       :  1e-5
+ConvHF      :  1e-6
+MuMin       : -2.0
+MuMax       :  2.0
+
+WriteIO     :  0
+WriteFiles  :  0
+EmaxFiles   :  3
+EstepFiles  :  10
+
+offset_x    : 1e-12

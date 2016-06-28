@@ -114,6 +114,7 @@ def PrintDet(params_F,hfe,mu,En_F):
 	for i in range(len(En_F)):
 		print En_F[i],'\t',sp.real(Det_F[i]),'\t',sp.imag(Det_F[i])
 
+
 #####################################################################
 # Hartree-Fock solver ###############################################
 
@@ -138,7 +139,7 @@ def SolveHFssn(params_F,chat):
 		n_old = 1e5
 		mu_old = 1e5
 		i = 0		# iterations counter
-		imax = 1000	# maximum number of iterations
+		imax = p.HF_max_iter	# maximum number of iterations
 		while any([sp.fabs(mu-mu_old) > p.ConvHF, sp.fabs(n-n_old) > p.ConvHF]):
 			n_old = n
 			mu_old = mu
@@ -158,6 +159,7 @@ def SolveHFssn(params_F,chat):
 			.format(i,float(sp.real(n)),float(sp.imag(n)),float(sp.real(mu)),float(sp.imag(mu))))
 			i += 1
 	return sp.array([n,mu,ErrMsg])
+
 
 #####################################################################
 # convolution procedures using FFT ##################################

@@ -6,6 +6,7 @@
 ;ConvHF      convergence criterium for HF equations
 ;MuMin       lower limit of mu for bisection
 ;MuMax       upper limit of mu for bisection
+;HF_max_iter  maximum number of iterations for HF solver
 ;WriteIO     write to screen?
 ;WriteFiles  write data files?
 ;EmaxFiles   frequency range for output
@@ -24,6 +25,7 @@ ConvX       :  1e-5
 ConvHF      :  1e-6
 MuMin       : -2.0
 MuMax       :  2.0
+HF_max_iter :  10000
 
 WriteIO     :  0
 WriteFiles  :  0

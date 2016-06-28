@@ -1,6 +1,7 @@
 SQUAD
 =====
 **Description:**
+
 SQUAD (**su**perconducting **qua**ntum **d**ot) is a small python code that allows to calculate spectral and transport properties of a single-level quantum dot connected to two BCS superconducting leads.
 
 **Basic features:**

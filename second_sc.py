@@ -22,26 +22,23 @@ eps    = 1.0*eval(argv[5])
 P      = 1.0*eval(argv[6])
 try: chat  = eval(argv[7])
 except IndexError: chat = 1	# 1 = write progress lines to standard output
+GammaN = 0.0 # only for compatibility with function from ssn branch
 
-#print '{0: .14f} {1: .14f}'.format(GammaR,GammaL)
-
-WriteOut = 0				# 1 = write datafiles
+WriteOut = 1				# 1 = write datafiles
 ed  = eps-U/2.0				# localized energy level shifted to symmetry point
 Phi = P*sp.pi
 Conv = 2e-4					# convergence criterium for n and mu
 ConvX = 1e-5				# convergence criterium for brentq/fixed_point
 
+params_F = [U,Delta,GammaR,GammaL,GammaN,P,eps]
+
 FitMin = 20.0
 FitMax = 30.0
-
-#N  = 2**19-1				# number of points for bubble/self-energy fft calculation
-#dE = 1e-4
 
 # RuntimeWarning: invalid value encountered in power:
 # for KK we need range(N)**3, for large arrays it can 
 # hit the limit of 9223372036854775808 == 2**63 of signed int
 # large values of N also introduce instability to calcualtion of ABS
-
 N  = 2**19-1				# number of points for bubble/self-energy fft calculation
 dE = 1e-4
 dE_dec = int(-sp.log10(dE))
@@ -62,12 +59,11 @@ if chat: print '# U ={0: .3f}, Delta ={1: .3f}, GammaR ={2: .3f}, GammaL ={3: .3
 
 if chat: print '# calculating HF solution...'
 try:
-	[n,mu,wzero,ErrMsgHF] = SolveHF(U,Delta,GammaR,GammaL,eps,P)
+	[n,mu,wzero,ErrMsgHF] = SolveHF(params_F)
 except RuntimeError:
 	print '#  Warning: failed to calculate HF solution.'
 	exit(0)
 
-params_F = [U,Delta,GammaR,GammaL,P,eps]
 hfe = ed+U*n				# Hartree-Fock energy
 wzero = AndreevEnergy(U,GammaR,GammaL,Delta,Phi,hfe,mu)		# HF ABS frequencies
 #print '{0: .3f}\t{1: .3f}\t{2: .3f}\t{3: .3f}\t{4: .3f}\t{5: .5f}\t{6: .5f}\t{7: .5f}'\
@@ -134,7 +130,7 @@ while any([sp.fabs(n-n_old)>Conv,sp.fabs(mu-mu_old)>Conv]):
 #if WriteOut == 1: WriteFile(En_F,GFn_F,GFa_F,params_F,wzero,'HF_green_sc',EminExp,10)
 
 # interacting Green's function ############################
-[GFn_F,GFa_F,Det_F,ABS_F,ABSpos_F,Res_F] = FillGreensFunction2(params_F,n,mu,Sigman_F,Sigmaa_F,En_F)
+[GFn_F,GFa_F,Det_F,ABS_F,ABSpos_F,Res_F] = FillGreensFunction(params_F,n,mu,Sigman_F,Sigmaa_F,En_F)
 GFn_F = FitTail(En_F,GFn_F,FitMin,FitMax,'odd')
 GFa_F = FitTail(En_F,GFa_F,FitMin,FitMax,'even')
 wzeroInt = ABS_F[1]

@@ -8,7 +8,7 @@ from time import ctime,time
 from sys import argv,exit,version_info
 import scipy as sp
 from scipy.optimize import brentq,fixed_point
-from squadlib1 import FillEnergies
+from squadlib1 import FillEnergies,QParticleResidue
 from squadlib2 import WriteFile,IntDOS
 import ssnlib as ssn	# caution about namespace collisions with squadlib1/2 !!!
 import params as p
@@ -27,10 +27,10 @@ GammaNbar = GammaN/2.0
 ed        = eps-U/2.0
 Phi       = P*sp.pi
 
-params_F = [U,Delta,GammaR,GammaL,GammaNbar,Phi,eps]
+params_F  = [U,Delta,GammaR,GammaL,GammaNbar,Phi,eps]
 
-# M = 21 is a good number for most calculations
-N       = 2**p.M-1			# number of points for bubble/self-energy fft calculation
+## M = 21 is a good number for most calculations
+N       = 2**p.M-1			# number of points for bubble/SE fft calculation
 dE_dec  = int(-sp.log10(p.dE))
 En_F    = FillEnergies(p.dE,N)
 SEtype  = 'ssn2nd'		# identifier for output files
@@ -59,36 +59,28 @@ hfe = ed+U*n
 [GFn_F,GFa_F,EdgePos1,EdgePos2] = ssn.FillGreenHF(params_F,hfe,mu,En_F)
 if p.chat: print '# intDOS(HF) ={0: .6f}'.format(float(IntDOS(GFn_F,En_F)))
 
-if p.WriteFiles: WriteFile(En_F,GFn_F,GFa_F,[U,Delta,GammaR,GammaL,P,eps]\
-,0.0,'ssnHF_GF',p.EmaxFiles,p.EstepFiles)
+if p.WriteFiles: WriteFile(En_F,GFn_F,GFa_F,params_F,0.0,'ssnHF_GF',p.EmaxFiles,p.EstepFiles)
 #ssn.PrintDet(params_F,hfe,mu,En_F)
 
-# bubbles and vertex ######################################
+## bubbles and vertex #####################################
 [Chin_F,Chia_F] = ssn.TwoParticleBubbles(GFn_F,GFa_F,En_F)
-if p.WriteFiles: WriteFile(En_F,Chin_F,Chia_F,[U,Delta,GammaR,GammaL,P,eps]\
-,0.0,'ssnHF_bub',p.EmaxFiles,p.EstepFiles)
+if p.WriteFiles: WriteFile(En_F,Chin_F,Chia_F,params_F,0.0,'ssnHF_bub',p.EmaxFiles,p.EstepFiles)
 ChiGamma_F = U**2*(Chin_F+Chia_F)  # second-order kernel of SDE (without HF term)
 
-# dynamical self-energy ###################################
+## dynamical self-energy ##################################
 [Sigman_F,Sigmaa_F] = ssn.SelfEnergy(GFn_F,GFa_F,ChiGamma_F,En_F)
-if p.WriteFiles: WriteFile(En_F,Sigman_F,Sigmaa_F,[U,Delta,GammaR,GammaL,P,eps]\
-,0.0,'ssn_SE',p.EmaxFiles,p.EstepFiles)
+if p.WriteFiles: WriteFile(En_F,Sigman_F,Sigmaa_F,params_F,0.0,'ssn_SE',p.EmaxFiles,p.EstepFiles)
 [GFn_F,GFa_F,Det_F] = ssn.FillGreensFunction(params_F,n,mu,Sigman_F,Sigmaa_F,En_F)
 
-# initial guess for static part of self-energy ############
+## initial guess for static part of self-energy ###########
 if eps == 0.0: n = 0.5
 else: n = ssn.ElectronDensity(params_F,n,mu,En_F,Sigman_F,Sigmaa_F)
 mu      = ssn.CooperPairDensity(params_F,n,mu,En_F,Sigman_F,Sigmaa_F)
 
-#from scipy.integrate import simps
-#TailL =  sp.imag(GFn_F)[0]*En_F[0]/sp.pi	# left tail
-#print(-simps(sp.imag(GFn_F[:N/2+1]),En_F[:N/2+1])/sp.pi+TailL)
-#print(-simps(sp.imag(GFa_F[:N/2+1]),En_F[:N/2+1])/sp.pi)
+if p.chat: print '# initial 2nd order values: n ={0: .6f}, mu ={1: .6f}'\
+.format(float(n),float(mu))
 
-
-if p.chat: print '# initial 2nd order values: n ={0: .6f}, mu ={1: .6f}'.format(float(n),float(mu))
-
-# static self-energy ######################################
+## static self-energy #####################################
 if p.chat: print('# iterating densities n and mu')
 n_old = 1e5
 mu_old = 1e5
@@ -114,18 +106,21 @@ while any([sp.fabs(n-n_old)>p.ConvN,sp.fabs(mu-mu_old)>p.ConvN]):
 
 ## interacting Green's function ###########################
 [GFn_F,GFa_F,Det_F] = ssn.FillGreensFunction(params_F,n,mu,Sigman_F,Sigmaa_F,En_F)
-if p.WriteFiles: WriteFile(En_F,GFn_F,GFa_F,[U,Delta,GammaR,GammaL,P,eps]\
-,0.0,'ssn2nd_GF',p.EmaxFiles,p.EstepFiles)
+if p.WriteFiles: WriteFile(En_F,GFn_F,GFa_F,params_F,0.0,'ssn2nd_GF',p.EmaxFiles,p.EstepFiles)
 DOSzero = -sp.imag(GFn_F[N/2])/sp.pi
 
 if p.chat: print '# final 2nd order values: n ={0: .6f}, mu ={1: .6f}'.format(float(n),float(mu))
 if p.chat: print '# intDOS(2nd) ={0: .5f}, DoS[0] ={1: .5f}'.format(float(IntDOS(GFn_F,En_F)),float(DOSzero))
 
-Z = ssn.QParticleResidue(En_F,Sigman_F)
-if p.chat: print '# quasiparticle weigth Z ={0: .6f}, effective mass m* ={1: .6f}m'.format(float(Z),float(1.0/Z))
+## quasiparticle weight ###################################
+Z = QParticleResidue(En_F,Sigman_F)
+if p.chat: print '# quasiparticle weigth Z ={0: .6f}, \
+effective mass m* ={1: .6f}m'.format(float(Z),float(1.0/Z))
 
 print '{0: .3f}\t{1: .3f}\t{2: .3f}\t{3: .3f}\t{4: .3f}\t{5: .3f}\t{6: .8f}\t{7: .8f}\t{8: .8f}\t{9: .8f}'\
 .format(U,GammaR,GammaL,GammaN,eps,P,float(n),float(mu),float(Z),float(DOSzero))
 
 if p.chat: print('# '+argv[0]+' DONE after '+str(sp.around(time()-t,2))+' seconds.')
+
+## ssn_second.py ##
 

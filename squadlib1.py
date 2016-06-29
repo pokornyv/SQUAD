@@ -13,6 +13,7 @@ HeavisideTheta = lambda x: (sp.sign(x)+1.0)/2.0
 FermiDirac     = lambda E,T: 1.0/(sp.exp((E+1e-12)/T)+1.0)
 BoseEinstein   = lambda E,T: 1.0/(sp.exp((E+1e-12)/T)-1.0)
 
+
 def KondoTemperature(U,Gamma,eps):
 	"""	calculating Kondo temperature sqrt(U*Gamma/2)*exp[pi*abs(U**2-4*eps**2)/(8*U*Gamma)]	"""
 	if U != 0.0 and Gamma != 0.0:
@@ -21,11 +22,21 @@ def KondoTemperature(U,Gamma,eps):
 		print "# Warning: KondoTemperature: Kondo temperature not defined."
 		return -1.0
 
+
+def QParticleResidue(En_F,SE_F):
+	""" calculates the quasiparticle residue Z = m/m* """
+	from scipy.interpolate import InterpolatedUnivariateSpline
+	ReSE = InterpolatedUnivariateSpline(En_F,sp.real(SE_F))
+	dReSEdw = ReSE.derivatives(0.0)[1]
+	return 1.0/(1.0-dReSEdw)
+
+
 def FillEnergiesLinear(Emin,Emax,dE):
 	"""	returns the array of energies [Emin,Emin+dE,...,Emax-dE,Emax) """
 	En_F = sp.arange(Emin,Emax,dE)
 	En_F = sp.around(En_F,int(-sp.log10(dE)))
 	return En_F
+
 
 def FillEnergies(dE,N):
 	"""	returns the symmetric array of energies 
@@ -34,11 +45,13 @@ def FillEnergies(dE,N):
 	En_F = sp.linspace(-(N-1)/2*dE,(N-1)/2*dE,N)
 	return sp.around(En_F,dE_dec+2)
 
+
 def FillEnergies2(dE,N):
 	"""	returns the symmetric array of energies [Emin,Emin+dE,...,-Emin-dE,-Emin] """
 	dE_dec = int(-sp.log10(dE))
 	En_F = sp.concatenate([sp.linspace(-N*dE,-dE,N),sp.linspace(0.0,N*dE,N+1)])
 	return sp.around(En_F,dE_dec+2)
+
 
 #####################################################################
 # dot-lead hybridizations ###########################################
@@ -46,26 +59,32 @@ def FillEnergies2(dE,N):
 def SFunctionBand(GammaR,GammaL,Delta,x):
 	return 1.0j*sp.sign(x)*(GammaL+GammaR)/sp.sqrt(x**2-Delta**2)
 
+
 def SFunctionGap(GammaR,GammaL,Delta,x):
 	return (GammaL+GammaR)/sp.sqrt(Delta**2-x**2)
+
 
 def DeltaFunctionBand(GammaR,GammaL,Delta,Phi,x):
 	PhiC = lambda x: sp.arctan((GammaL-GammaR)/(GammaL+GammaR)*sp.tan(Phi/2.0))
 	return 1.0j*sp.sign(x)*Delta*sp.exp(1.0j*PhiC(x))/sp.sqrt(x**2-Delta**2)\
 	*(GammaL*sp.exp(-1.0j*Phi/2.0) + GammaR*sp.exp(1.0j*Phi/2.0))
 
+
 def DeltaFunctionGap(GammaR,GammaL,Delta,Phi,x):
 	PhiC = lambda x: sp.arctan((GammaL-GammaR)/(GammaL+GammaR)*sp.tan(Phi/2.0))
 	return Delta*sp.exp(1.0j*PhiC(x))/sp.sqrt(Delta**2-x**2)\
 	*(GammaL*sp.exp(-1.0j*Phi/2.0) + GammaR*sp.exp(1.0j*Phi/2.0))
 
+
 def SFunctionGapDiff(GammaR,GammaL,Delta,x):
 	return x/(Delta**2-x**2)**(3.0/2.0)*(GammaL+GammaR)
+
 
 def DeltaFunctionGapDiff(GammaR,GammaL,Delta,Phi,x):
 	PhiC = lambda x: sp.arctan((GammaL-GammaR)/(GammaL+GammaR)*sp.tan(Phi/2.0))	
 	return x*Delta*sp.exp(1.0j*PhiC(x))/(Delta**2-x**2)**(3.0/2.0)\
 	*(GammaL*sp.exp(-1.0j*Phi/2.0) + GammaR*sp.exp(1.0j*Phi/2.0))
+
 
 #####################################################################
 # Andreev bound states frequencies ##################################
@@ -75,13 +94,13 @@ def AndreevEnergy(U,GammaR,GammaL,Delta,Phi,hfe,mu):
 	from scipy.optimize import fixed_point
 	SF = lambda x: SFunctionGap(GammaR,GammaL,Delta,x)
 	DF = lambda x: DeltaFunctionGap(GammaR,GammaL,Delta,Phi,x)
-	#eqn = lambda x: sp.sqrt(hfe**2+(DF(x)-U*mu)*(sp.conj(DF(x))-U*mu))/(1.0+SF(x)) #for sp.conj(Delta)!!!
 	eqn = lambda x: sp.sqrt(hfe**2+(DF(x)-U*mu)**2)/(1.0+SF(x))
 	wzero = sp.real_if_close(fixed_point(eqn,0.9*Delta))
 	if sp.imag(wzero) != 0.0:
 		print "# Warning: non-zero Im w0 = "+str(sp.imag(wzero))
 		wzero = sp.real(wzero)
 	return wzero	#fixed_point returns numpy.ndarray!
+
 
 #####################################################################
 # Green's function determinants on real axis ########################
@@ -93,6 +112,7 @@ def DetBand(U,GammaR,GammaL,Delta,Phi,hfe,mu,x):
 	#return x**2*(1.0+SF(x))**2-hfe**2-(DF(x)-U*mu)*(sp.conj(DF(x))-U*mu) #for sp.conj(Delta)!!!
 	return x**2*(1.0+SF(x))**2-hfe**2-(DF(x)-U*mu)**2
 
+
 def DetGap(U,GammaR,GammaL,Delta,Phi,hfe,mu,x):
 	"""	determinant of the HF Green's function in the fully gapped region (-DeltaMin:0)	
 	    real part only, residues at ABS must be added by hand """
@@ -100,6 +120,7 @@ def DetGap(U,GammaR,GammaL,Delta,Phi,hfe,mu,x):
 	DF = lambda x: DeltaFunctionGap(GammaR,GammaL,Delta,Phi,x)
 	return x**2*(1.0+SF(x))**2-hfe**2-(DF(x)-U*mu)*(sp.conj(DF(x))-U*mu) #for sp.conj(Delta)!!!
 	#return x**2*(1.0+SF(x))**2-hfe**2-(DF(x)-U*mu)**2 
+
 
 def DetDiff(U,GammaR,GammaL,Delta,Phi,hfe,mu,x):
 	""" frequency derivative of the determinant of the HF Green's function in gap region """
@@ -116,6 +137,7 @@ def DetDiff(U,GammaR,GammaL,Delta,Phi,hfe,mu,x):
 		DDf = 1e-2
 	return DDf
 
+
 def GFnBand(U,GammaR,GammaL,Delta,Phi,hfe,mu,x):
 	""" normal GF in band region """
 	SF = lambda x: SFunctionBand(GammaR,GammaL,Delta,x)
@@ -123,12 +145,14 @@ def GFnBand(U,GammaR,GammaL,Delta,Phi,hfe,mu,x):
 	Det = lambda x: DetBand(U,GammaR,GammaL,Delta,Phi,hfe,mu,x)
 	return (x*(1.0+SF(x))+hfe)/Det(x)
 
+
 def GFnGap(U,GammaR,GammaL,Delta,Phi,hfe,mu,x):
 	""" normal GF in gap region """
 	SF = lambda x: SFunctionGap(GammaR,GammaL,Delta,x)
 	DF = lambda x: DeltaFunctionGap(GammaR,GammaL,Delta,Phi,x)
 	Det = lambda x: DetGap(U,GammaR,GammaL,Delta,Phi,hfe,mu,x)
 	return (x*(1.0+SF(x))+hfe)/Det(x)
+
 
 def GFaBand(U,GammaR,GammaL,Delta,Phi,hfe,mu,x):
 	""" anomalous GF in band region """
@@ -138,6 +162,7 @@ def GFaBand(U,GammaR,GammaL,Delta,Phi,hfe,mu,x):
 	#return -(sp.conj(DF(x))-U*mu)/Det(x) #for sp.conj(Delta)!!!
 	return -(DF(x)-U*mu)/Det(x)
 
+
 def GFaGap(U,GammaR,GammaL,Delta,Phi,hfe,mu,x):
 	""" anomalous GF in gap region """
 	SF = lambda x: SFunctionGap(GammaR,GammaL,Delta,x)
@@ -145,6 +170,7 @@ def GFaGap(U,GammaR,GammaL,Delta,Phi,hfe,mu,x):
 	Det = lambda x: DetGap(U,GammaR,GammaL,Delta,Phi,hfe,mu,x)
 	#return -(sp.conj(DF(x))-U*mu)/Det(x) #for sp.conj(Delta)!!!
 	return -(DF(x)-U*mu)/Det(x)
+
 
 def GFresidues(U,Delta,GammaR,GammaL,hfe,Phi,mu,wzero):
 	"""	residues of the Green's functions at ABS
@@ -157,6 +183,7 @@ def GFresidues(U,Delta,GammaR,GammaL,hfe,Phi,mu,wzero):
 		NomA  = -(DeltaFunctionGap(GammaR,GammaL,Delta,Phi,wzero)-U*mu)
 		Den   =  DetDiff(U,GammaR,GammaL,Delta,Phi,hfe,mu,wzero)
 		return sp.real(sp.array([NomNp,NomNh,NomA]/Den))
+
 
 #####################################################################
 # Matsubara sums for HF calculations ################################
@@ -171,6 +198,7 @@ def MSum1(U,Delta,GammaR,GammaL,hfe,Phi,mu,wzero,En_F):
 	AndreevTerm = 1.0/DetDiff(U,GammaR,GammaL,Delta,Phi,hfe,mu,-wzero)
 	return sp.real_if_close(ContinuumTerm + AndreevTerm)
 
+
 def MSum2(U,Delta,GammaR,GammaL,hfe,Phi,mu,wzero,En_F):
 	"""	Matsubara sum of (iw(1+s(iw))+eps)/D(iw) """
 	Det = lambda x: DetBand(U,GammaR,GammaL,Delta,Phi,hfe,mu,x)
@@ -183,6 +211,7 @@ def MSum2(U,Delta,GammaR,GammaL,hfe,Phi,mu,wzero,En_F):
 	AndreevTerm = -wzero*(1.0+SFunctionGap(GammaR,GammaL,Delta,-wzero))\
 	/DetDiff(U,GammaR,GammaL,Delta,Phi,hfe,mu,-wzero)
 	return sp.real_if_close(ContinuumTerm + AndreevTerm)
+
 
 def MSum3(U,Delta,GammaR,GammaL,hfe,Phi,mu,wzero,En_F):
 	"""	Matsubara sum of sp.conj(Delta_Phi(iw))/D(iw) """
@@ -198,7 +227,11 @@ def MSum3(U,Delta,GammaR,GammaL,hfe,Phi,mu,wzero,En_F):
 	/DetDiff(U,GammaR,GammaL,Delta,Phi,hfe,mu,-wzero)
 	return sp.real_if_close(ContinuumTerm + AndreevTerm)
 
+
 def MSumsHF(U,Delta,GammaR,GammaL,hfe,Phi,mu,wzero,En_F):
+	"""	Matsubara sum of 1/D(iw)
+		Matsubara sum of (iw(1+s(iw))+eps)/D(iw)
+		Matsubara sum of sp.conj(Delta_Phi(iw))/D(iw) """
 	Det = lambda x: DetBand(U,GammaR,GammaL,Delta,Phi,hfe,mu,x)
 	Sf  = lambda x: SFunctionBand(GammaR,GammaL,Delta,x)
 	Del = lambda x: DeltaFunctionBand(GammaR,GammaL,Delta,Phi,x)
@@ -209,22 +242,30 @@ def MSumsHF(U,Delta,GammaR,GammaL,hfe,Phi,mu,wzero,En_F):
 	Int2_F = En_F*(sp.imag(Sf_F)*sp.real(Det_F)-sp.imag(Det_F))/(Det_F*sp.conj(Det_F))
 	Int3_F = sp.imag(Delta_F)*sp.real(Det_F)/(Det_F*sp.conj(Det_F))
 	Tail1 = -Int1_F[0]*En_F[0]/2.0	# behaves as -1/x^3 CHECK!!!!
-	Tail2 = -Int2_F[0]*En_F[0]	# behaves as 1/x^2 CHECK!!!!
+	Tail2 = -Int2_F[0]*En_F[0]	    # behaves as 1/x^2 CHECK!!!!
 	Tail3 = -Int3_F[0]*En_F[0]/2.0	# behaves as 1/x^3 CHECK!!!!
-	ContinuumTerm1 = (simps(Int_F,En_F)+Tail)/sp.pi
+	ContinuumTerm1 = (simps(Int1_F,En_F)+Tail1)/sp.pi
 	AndreevTerm1 = 1.0/DetDiff(U,GammaR,GammaL,Delta,Phi,hfe,mu,-wzero)
-	ContinuumTerm2 = -(simps(Int_F,En_F)+Tail)/sp.pi
+	ContinuumTerm2 = -(simps(Int2_F,En_F)+Tail2)/sp.pi
 	AndreevTerm2 = -wzero*(1.0+SFunctionGap(GammaR,GammaL,Delta,-wzero))/DetDiff(U,GammaR,GammaL,Delta,Phi,hfe,mu,-wzero)
-	ContinuumTerm3 = -(simps(Int_F,En_F)+Tail)/sp.pi
+	ContinuumTerm3 = -(simps(Int3_F,En_F)+Tail3)/sp.pi
 	AndreevTerm3 = DeltaFunctionGap(GammaR,GammaL,Delta,Phi,-wzero)/DetDiff(U,GammaR,GammaL,Delta,Phi,hfe,mu,-wzero)
-	return [sp.real_if_close(ContinuumTerm1 + AndreevTerm1),sp.real_if_close(ContinuumTerm2 + AndreevTerm2),\
-	sp.real_if_close(ContinuumTerm3 + AndreevTerm3)]
+	D1 = sp.real_if_close(ContinuumTerm1 + AndreevTerm1)
+	D2 = sp.real_if_close(ContinuumTerm2 + AndreevTerm2)
+	D3 = sp.real_if_close(ContinuumTerm3 + AndreevTerm3)
+	return [D1,D2,D3]
+
 
 #####################################################################
 # Hartree-Fock solver ###############################################
 
-def SolveHF(U,Delta,GammaR,GammaL,eps,P):
+def SolveHF(Params_F):
 	""" HF equations solver """
+	from scipy.optimize import fixed_point
+	[U,Delta,GammaR,GammaL,GammaN,P,eps] = Params_F
+	Phi = P*sp.pi
+	Gamma = (GammaR + GammaL)
+
 	Conv = 1e-6			# convergence criterium
 	ed = eps-U/2.0		# localized energy level shifted to symmetry point
 	ErrMsg = 0			# error message indicator
@@ -233,9 +274,6 @@ def SolveHF(U,Delta,GammaR,GammaL,eps,P):
 	Emin = -100.0						# lower cutoff for band energy
 	En_F = FillEnergiesLinear(Emin,-Delta,dE)	# [Emin:-Delta)
 	# initial conditions ######################################
-	from scipy.optimize import fixed_point
-	Phi = P*sp.pi
-	Gamma = (GammaR + GammaL)
 	n_density = lambda x: 0.5 - sp.arctan((ed+U*x)/Gamma)/sp.pi	# starting from symmetric metallic case
 	n = fixed_point(n_density,0.5)
 	mu = 0.2
@@ -249,19 +287,20 @@ def SolveHF(U,Delta,GammaR,GammaL,eps,P):
 		mu_old = 1e5
 		wzero_old = 1e5
 		i = 0			# iterations counter
-		imax = 1000	# number of iterations for breaking the cycle
+		imax = 10000	# number of iterations for breaking the cycle
 		while any([sp.fabs(wzero-wzero_old) > Conv,sp.fabs(mu-mu_old) > Conv,sp.fabs(n-n_old) > Conv]):
 			n_old = n
 			mu_old = mu
 			wzero_old = wzero
 			hfe = ed+U*n
-			D1 = MSum1(U,Delta,GammaR,GammaL,hfe,Phi,mu,wzero,En_F)
-			D3 = MSum3(U,Delta,GammaR,GammaL,hfe,Phi,mu,wzero,En_F)
+			[D1,D2,D3] = MSumsHF(U,Delta,GammaR,GammaL,hfe,Phi,mu,wzero,En_F)
+			#D1 = MSum1(U,Delta,GammaR,GammaL,hfe,Phi,mu,wzero,En_F)
+			#D3 = MSum3(U,Delta,GammaR,GammaL,hfe,Phi,mu,wzero,En_F)
 			#print D1,D3
 			mu = -D3/(1.0-U*D1)
 			if eps == 0: n = 0.5
 			else:
-				D2 = MSum2(U,Delta,GammaR,GammaL,hfe,Phi,mu,wzero,En_F)
+				#D2 = MSum2(U,Delta,GammaR,GammaL,hfe,Phi,mu,wzero,En_F)
 				n = (D2+ed*D1)/(1.0-U*D1)
 			hfe = ed+U*n
 			wzero = AndreevEnergy(U,GammaR,GammaL,Delta,Phi,hfe,mu)

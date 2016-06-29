@@ -6,18 +6,10 @@
 import scipy as sp
 from scipy.integrate import simps
 from scipy.fftpack import fft,ifft
-from scipy.interpolate import InterpolatedUnivariateSpline
 from squadlib1 import SFunctionBand,SFunctionGap,DeltaFunctionBand,DeltaFunctionGap
 from squadlib1 import FermiDirac,BoseEinstein
+from squadlib2 import KramersKronigFFT
 import params as p
-
-
-def QParticleResidue(En_F,SE_F):
-	""" calculates the quasiparticle residue Z = m/m* """
-	ReSE = InterpolatedUnivariateSpline(En_F,sp.real(SE_F))
-	dReSEdw = ReSE.derivatives(0.0)[1]
-	return 1.0/(1.0-dReSEdw)
-
 
 #####################################################################
 # Green's function determinants on real axis ########################
@@ -93,26 +85,6 @@ def GreensFunction(params_F,hfe,mu,SEn_F,SEa_F,SEnStar_F,SEaStar_F,En_F,A):
 	GFn_F =  (En_F*(1.0+S_F)+1.0j*GammaNbar+hfe-SEnStar_F)/Det_F
 	GFa_F = -(D_F-U*mu-SEa_F)/Det_F
 	return [GFn_F,GFa_F,Det_F]
-
-
-#####################################################################
-# Andreev bound states frequencies ##################################
-
-def PrintDet(params_F,hfe,mu,En_F):
-	""" print the determinant for testing purposes """
-	[U,Delta,GammaR,GammaL,GammaNbar,Phi,eps] = params_F 
-	dE = sp.around(En_F[1]-En_F[0],8)
-	dE_dec = int(-sp.log10(dE))
-	EdgePos1 = sp.nonzero(En_F == sp.around(-Delta,dE_dec))[0][0]
-	EdgePos2 = sp.nonzero(En_F == sp.around(Delta,dE_dec))[0][0]
-	Det_F = sp.zeros_like(En_F,dtype = complex)
-	Detband = lambda x: DetBand(params_F,hfe,mu,x)
-	Detgap  = lambda x: DetGap(params_F,hfe,mu,x)
-	Det_F[:EdgePos1] = Detband(En_F[:EdgePos1])
-	Det_F[EdgePos1:EdgePos2] = Detgap(En_F[EdgePos1:EdgePos2])
-	Det_F[EdgePos2:] = Detband(En_F[EdgePos2:])
-	for i in range(len(En_F)):
-		print En_F[i],'\t',sp.real(Det_F[i]),'\t',sp.imag(Det_F[i])
 
 
 #####################################################################
@@ -213,29 +185,6 @@ def SelfEnergy(GFn_F,GFa_F,ChiGamma_F,En_F):
 	Sigman_F = KramersKronigFFT(ImSEn_F) + 1.0j*ImSEn_F
 	Sigmaa_F = KramersKronigFFT(ImSEa_F) + 1.0j*ImSEa_F
 	return [Sigman_F,Sigmaa_F]
-
-
-def KramersKronigFFT(ImX_F):
-	"""	Hilbert transform used to calculate real part of a function from its imaginary part
-	    uses piecewise cubic interpolated integral kernel of the Hilbert transform
-	    use only if len(ImX_F)=2**m-1, uses fft from scipy.fftpack  """
-	N = len(ImX_F)
-	A = sp.array(range(3,N+1),dtype='float64')
-	X1 = 4.0*sp.log(1.5)
-	X2 = 10.0*sp.log(4.0/3.0)-6.0*sp.log(1.5)
-	## filling the kernel
-	Kernel_F = sp.zeros(N-2,dtype='float64')
-	Kernel_F = (1-A**2)*((A-2)*sp.arctanh(1.0/(1-2*A))+(A+2)*sp.arctanh(1.0/(1+2*A)))\
-	+((A**3-6*A**2+11*A-6)*sp.arctanh(1.0/(3-2*A))+(A+3)*(A**2+3*A+2)*sp.arctanh(1.0/(2*A+3)))/3.0
-	Kernel_F = sp.concatenate([-sp.flipud(Kernel_F),sp.array([-X2,-X1,0.0,X1,X2]),Kernel_F])/sp.pi
-	## zero-padding the functions for fft
-	ImXExt_F = sp.concatenate([ImX_F[(N-1)/2:],sp.zeros(N+2),ImX_F[:(N-1)/2]])
-	KernelExt_F = sp.concatenate([Kernel_F[N:],sp.zeros(1),Kernel_F[:N]])
-	## performing the fft
-	ftReXExt_F = -fft(ImXExt_F)*fft(KernelExt_F)
-	ReXExt_F = sp.real(ifft(ftReXExt_F))
-	ReX_F = sp.concatenate([ReXExt_F[(3*N+3)/2+1:],ReXExt_F[:(N-1)/2+1]])
-	return ReX_F
 
 
 #####################################################################
@@ -383,4 +332,25 @@ def FillGreensFunction(params_F,n,mu,SEn_F,SEa_F,En_F):
 	GFa_F = sp.concatenate([GFa1_F,sp.zeros(1),GFa2_F,sp.zeros(1),GFa3_F])
 	return [GFn_F,GFa_F,Det_F]
 
+
+#####################################################################
+# Auxiliary functions ###############################################
+
+def PrintDet(params_F,hfe,mu,En_F):
+	""" print the determinant for testing purposes """
+	[U,Delta,GammaR,GammaL,GammaNbar,Phi,eps] = params_F 
+	dE = sp.around(En_F[1]-En_F[0],8)
+	dE_dec = int(-sp.log10(dE))
+	EdgePos1 = sp.nonzero(En_F == sp.around(-Delta,dE_dec))[0][0]
+	EdgePos2 = sp.nonzero(En_F == sp.around(Delta,dE_dec))[0][0]
+	Det_F = sp.zeros_like(En_F,dtype = complex)
+	Detband = lambda x: DetBand(params_F,hfe,mu,x)
+	Detgap  = lambda x: DetGap(params_F,hfe,mu,x)
+	Det_F[:EdgePos1] = Detband(En_F[:EdgePos1])
+	Det_F[EdgePos1:EdgePos2] = Detgap(En_F[EdgePos1:EdgePos2])
+	Det_F[EdgePos2:] = Detband(En_F[EdgePos2:])
+	for i in range(len(En_F)):
+		print En_F[i],'\t',sp.real(Det_F[i]),'\t',sp.imag(Det_F[i])
+
+## ssnlib.py end ##
 

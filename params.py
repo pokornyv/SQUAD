@@ -22,3 +22,6 @@ EmaxFiles  = float(config.get('params','EmaxFiles'))
 EstepFiles = int(config.get('params','EstepFiles'))
 
 offset_x  = float(config.get('params','offset_x'))
+
+## params.py end ##
+

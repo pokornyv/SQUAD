@@ -19,6 +19,7 @@ eps    = 1.0*eval(argv[5])
 P      = 1.0*eval(argv[6])
 try: chat  = eval(argv[7])
 except IndexError: chat = 1	# 1 = write progress lines to standard output
+GammaN = 0.0 # only for compatibility with function from ssn branch
 
 WriteOut = 1				# 1 = write datafiles
 ed  = eps-U/2.0				# localized energy level shifted to symmetry point
@@ -64,7 +65,7 @@ except RuntimeError:
 	print '#  Warning: failed to calculate HF solution.'
 	exit(0)
 
-params_F = [U,Delta,GammaR,GammaL,P,eps]
+params_F = [U,Delta,GammaR,GammaL,GammaN,P,eps]
 hfe = ed+U*n				# Hartree-Fock energy
 wzero = AndreevEnergy(U,GammaR,GammaL,Delta,Phi,hfe,mu)		# HF ABS frequencies
 #print '{0: .3f}\t{1: .3f}\t{2: .3f}\t{3: .3f}\t{4: .3f}\t{5: .5f}\t{6: .5f}\t{7: .5f}'\

@@ -17,7 +17,10 @@ MuMax       = float(config.get('params','MuMax'))
 HF_max_iter = int(config.get('params','HF_max_iter'))
 
 chat       = bool(int(config.get('params','WriteIO')))
-WriteFiles = bool(int(config.get('params','WriteFiles')))
+W_HFGF     = bool(int(config.get('params','WriteFile_HFGF')))
+W_Bubble   = bool(int(config.get('params','WriteFile_Bub')))
+W_2ndSE    = bool(int(config.get('params','WriteFile_2ndSE')))
+W_2ndGF    = bool(int(config.get('params','WriteFile_2ndGF')))
 EmaxFiles  = float(config.get('params','EmaxFiles'))
 EstepFiles = int(config.get('params','EstepFiles'))
 

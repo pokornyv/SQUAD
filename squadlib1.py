@@ -182,7 +182,7 @@ def GFresidues(U,Delta,GammaR,GammaL,hfe,Phi,mu,wzero):
 		NomNh =  wzero*(1.0+SFunctionGap(GammaR,GammaL,Delta,wzero))-hfe
 		NomA  = -(DeltaFunctionGap(GammaR,GammaL,Delta,Phi,wzero)-U*mu)
 		Den   =  DetDiff(U,GammaR,GammaL,Delta,Phi,hfe,mu,wzero)
-		return sp.real(sp.array([NomNp,NomNh,NomA]/Den))
+		return sp.real(sp.array([NomNp,NomNh,NomA])/Den)
 
 
 #####################################################################

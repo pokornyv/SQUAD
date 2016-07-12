@@ -5,7 +5,7 @@
 # Vladislav Pokorny, 2015; pokornyv@fzu.cz
 
 #header for output files:
-#U		GammaR	GammaL	eps		Phi/pi	wABS		n			mu			ResGn1		ResGn2		ResA1
+#U		GammaR	GammaL	eps		Phi/pi	wABS		n			mu			ResGn1		ResGn2		ResA1	wABS_HF
 
 import scipy as sp
 from scipy.optimize import brentq,fixed_point
@@ -24,7 +24,7 @@ try: chat  = eval(argv[7])
 except IndexError: chat = 1	# 1 = write progress lines to standard output
 GammaN = 0.0 # only for compatibility with function from ssn branch
 
-WriteOut = 1				# 1 = write datafiles
+WriteOut = 0				# 1 = write datafiles
 ed  = eps-U/2.0				# localized energy level shifted to symmetry point
 Phi = P*sp.pi
 Conv = 2e-4					# convergence criterium for n and mu

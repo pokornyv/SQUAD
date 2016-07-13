@@ -120,7 +120,7 @@ effective mass m* ={1: .6f}m'.format(float(Z),float(1.0/Z))
 print '{0: .3f}\t{1: .3f}\t{2: .3f}\t{3: .3f}\t{4: .3f}\t{5: .3f}\t{6: .8f}\t{7: .8f}\t{8: .8f}\t{9: .8f}'\
 .format(U,GammaR,GammaL,GammaN,eps,P,float(n),float(mu),float(Z),float(DOSzero))
 
-if p.chat: print('# '+argv[0]+' DONE after '+str(sp.around(time()-t,2))+' seconds.')
+if p.chat: print('# '+argv[0]+' DONE after '+str(sp.around(time()-t,2))+' seconds.\n')
 
 ## ssn_second.py ##
 

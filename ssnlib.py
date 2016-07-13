@@ -127,9 +127,11 @@ def SolveHFssn(params_F,chat):
 				n = mu = -1.0
 				ErrMsg = 1	
 				break
-			if chat: print('# {0: 3d}\t n = {1: .6f} +{2: .6f}i,  mu = {3: .6f} +{4: .6f}i'\
-			.format(i,float(sp.real(n)),float(sp.imag(n)),float(sp.real(mu)),float(sp.imag(mu))))
+			#if chat: print('# {0: 3d}\t n = {1: .6f} +{2: .6f}i,  mu = {3: .6f} +{4: .6f}i'\
+			#.format(i,float(sp.real(n)),float(sp.imag(n)),float(sp.real(mu)),float(sp.imag(mu))))
 			i += 1
+		if chat: print('# {0: 3d} iterations,\t n = {1: .6f} +{2: .6f}i,  mu = {3: .6f} +{4: .6f}i'\
+		.format(i-1,float(sp.real(n)),float(sp.imag(n)),float(sp.real(mu)),float(sp.imag(mu))))
 	return sp.array([n,mu,ErrMsg])
 
 

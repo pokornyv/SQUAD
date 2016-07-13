@@ -17,7 +17,6 @@
 
 M                :  20
 dE               :  1e-4
-
 rootf            :  brentq
 ;rootf            :  fixed_point
 ConvN            :  1e-4
@@ -26,16 +25,18 @@ ConvHF           :  1e-6
 MuMin            : -2.0
 MuMax            :  2.0
 HF_max_iter      :  10000
+offset_x         : 1e-12
 
-WriteIO    	  	 :  0
+[IO]
+
+WriteIO    	  	 :  1
 
 WriteFile_HFGF   :  0
 WriteFile_Bub    :  0
 WriteFile_2ndSE  :  0
 WriteFile_2ndGF  :  1
 
-EmaxFiles        :  2
-EstepFiles       :  100
+EmaxFiles        :  5
+EstepFiles       :  10
 
-offset_x         : 1e-12
 

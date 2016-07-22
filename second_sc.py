@@ -30,7 +30,7 @@ Phi = P*sp.pi
 Conv = 2e-4					# convergence criterium for n and mu
 ConvX = 1e-5				# convergence criterium for brentq/fixed_point
 
-params_F = [U,Delta,GammaR,GammaL,GammaN,P,eps]
+params_F = [U,Delta,GammaR,GammaL,GammaN,Phi,eps]
 
 FitMin = 20.0
 FitMax = 30.0
@@ -39,7 +39,7 @@ FitMax = 30.0
 # for KK we need range(N)**3, for large arrays it can 
 # hit the limit of 9223372036854775808 == 2**63 of signed int
 # large values of N also introduce instability to calcualtion of ABS
-N  = 2**19-1				# number of points for bubble/self-energy fft calculation
+N  = 2**20-1				# number of points for bubble/self-energy fft calculation
 dE = 1e-4
 dE_dec = int(-sp.log10(dE))
 En_F   = FillEnergies2(dE,N)
@@ -177,6 +177,12 @@ SEnABS = sp.real(Sigman_F[ABSpos_F[0]])
 SEaABS = sp.real(Sigmaa_F[ABSpos_F[0]])
 if chat: print '# self-energies at ABS: SEn = {0: .5f}, SEa = {1: .5f}'.format(float(SEnABS),float(SEaABS))
 
-print '{0: .3f}\t{1: .3f}\t{2: .3f}\t{3: .3f}\t{4: .3f}\t{5: .5f}\t{6: .5f}\t{7: .5f}\t{8: .5f}\t{9: .5f}\t{10: .5f}\t{11: .5f}'\
-.format(U,GammaR,GammaL,eps,P,float(wzeroInt),float(n),float(mu),Res_F[0],Res_F[1],Res_F[2],float(wzero))
+s_ABS = sp.real_if_close(SFunctionGap(GammaR,GammaL,Delta,wzeroInt))
+D_ABS = sp.real_if_close(DeltaFunctionGap(GammaR,GammaL,Delta,Phi,wzeroInt))
+#print s_ABS,D_ABS,SEnABS,SEaABS
+print '{0: .3f}\t{1: .8f}\t{2: .8f}\t{3: .8f}\t{4: .8f}\t{5: .8f}'\
+.format(U,float(wzeroInt),float(s_ABS),float(D_ABS),float(SEnABS),float(SEaABS))
+
+#print '{0: .3f}\t{1: .3f}\t{2: .3f}\t{3: .3f}\t{4: .3f}\t{5: .5f}\t{6: .5f}\t{7: .5f}\t{8: .5f}\t{9: .5f}\t{10: .5f}\t{11: .5f}'\
+#.format(U,GammaR,GammaL,eps,P,float(wzeroInt),float(n),float(mu),Res_F[0],Res_F[1],Res_F[2],float(wzero))
 

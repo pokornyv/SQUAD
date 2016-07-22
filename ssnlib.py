@@ -7,7 +7,7 @@ import scipy as sp
 from scipy.integrate import simps
 from scipy.fftpack import fft,ifft
 from squadlib1 import SFunctionBand,SFunctionGap,DeltaFunctionBand,DeltaFunctionGap
-from squadlib1 import FermiDirac,BoseEinstein
+from squadlib1 import FermiDirac,BoseEinstein,FindEdges
 from squadlib2 import KramersKronigFFT
 import params as p
 
@@ -18,8 +18,8 @@ def DetBand(params_F,hfe,mu,x):
 	"""	determinant of the HF Green's function in 
 	the band region (-inf:-Delta),(Delta,inf) """
 	[U,Delta,GammaR,GammaL,GammaNbar,Phi,eps] = params_F 
-	SF = lambda x: SFunctionBand(GammaR,GammaL,Delta,x+p.offset_x)
-	DF = lambda x: DeltaFunctionBand(GammaR,GammaL,Delta,Phi,x+p.offset_x)
+	SF = lambda x: SFunctionBand(GammaR,GammaL,Delta,x+p.P['offset_x'])
+	DF = lambda x: DeltaFunctionBand(GammaR,GammaL,Delta,Phi,x+p.P['offset_x'])
 	return (x*(1.0+SF(x))+1.0j*GammaNbar)**2-hfe**2-(DF(x)-U*mu)**2
 
 
@@ -27,16 +27,16 @@ def DetGap(params_F,hfe,mu,x):
 	"""	determinant of the HF Green's function in 
 	the gap region (-Delta:Delta) """
 	[U,Delta,GammaR,GammaL,GammaNbar,Phi,eps] = params_F 
-	SF = lambda x: SFunctionGap(GammaR,GammaL,Delta,x+p.offset_x)
-	DF = lambda x: DeltaFunctionGap(GammaR,GammaL,Delta,Phi,x+p.offset_x)
+	SF = lambda x: SFunctionGap(GammaR,GammaL,Delta,x+p.P['offset_x'])
+	DF = lambda x: DeltaFunctionGap(GammaR,GammaL,Delta,Phi,x+p.P['offset_x'])
 	return (x*(1.0+SF(x))+1.0j*GammaNbar)**2-hfe**2-(DF(x)-U*mu)**2 
 
 
 def GFnBand(params_F,hfe,mu,x):
 	""" normal GF in band region """
 	[U,Delta,GammaR,GammaL,GammaNbar,Phi,eps] = params_F 
-	SF = lambda x: SFunctionBand(GammaR,GammaL,Delta,x+p.offset_x)
-	DF = lambda x: DeltaFunctionBand(GammaR,GammaL,Delta,Phi,x+p.offset_x)
+	SF = lambda x: SFunctionBand(GammaR,GammaL,Delta,x+p.P['offset_x'])
+	DF = lambda x: DeltaFunctionBand(GammaR,GammaL,Delta,Phi,x+p.P['offset_x'])
 	Det = lambda x: DetBand(params_F,hfe,mu,x)
 	return (x*(1.0+SF(x))+1.0j*GammaNbar+hfe)/Det(x)
 
@@ -44,8 +44,8 @@ def GFnBand(params_F,hfe,mu,x):
 def GFnGap(params_F,hfe,mu,x):
 	""" normal GF in gap region """
 	[U,Delta,GammaR,GammaL,GammaNbar,Phi,eps] = params_F 
-	SF = lambda x: SFunctionGap(GammaR,GammaL,Delta,x+p.offset_x)
-	DF = lambda x: DeltaFunctionGap(GammaR,GammaL,Delta,Phi,x+p.offset_x)
+	SF = lambda x: SFunctionGap(GammaR,GammaL,Delta,x+p.P['offset_x'])
+	DF = lambda x: DeltaFunctionGap(GammaR,GammaL,Delta,Phi,x+p.P['offset_x'])
 	Det = lambda x: DetGap(params_F,hfe,mu,x)
 	return (x*(1.0+SF(x))+1.0j*GammaNbar+hfe)/Det(x)
 
@@ -53,8 +53,8 @@ def GFnGap(params_F,hfe,mu,x):
 def GFaBand(params_F,hfe,mu,x):
 	""" anomalous GF in band region """
 	[U,Delta,GammaR,GammaL,GammaNbar,Phi,eps] = params_F 
-	SF = lambda x: SFunctionBand(GammaR,GammaL,Delta,x+p.offset_x)
-	DF = lambda x: DeltaFunctionBand(GammaR,GammaL,Delta,Phi,x+p.offset_x)
+	SF = lambda x: SFunctionBand(GammaR,GammaL,Delta,x+p.P['offset_x'])
+	DF = lambda x: DeltaFunctionBand(GammaR,GammaL,Delta,Phi,x+p.P['offset_x'])
 	Det = lambda x: DetBand(params_F,hfe,mu,x)
 	return -(DF(x)-U*mu)/Det(x)
 
@@ -62,8 +62,8 @@ def GFaBand(params_F,hfe,mu,x):
 def GFaGap(params_F,hfe,mu,x):
 	""" anomalous GF in gap region """
 	[U,Delta,GammaR,GammaL,GammaNbar,Phi,eps] = params_F 
-	SF = lambda x: SFunctionGap(GammaR,GammaL,Delta,x+p.offset_x)
-	DF = lambda x: DeltaFunctionGap(GammaR,GammaL,Delta,Phi,x+p.offset_x)
+	SF = lambda x: SFunctionGap(GammaR,GammaL,Delta,x+p.P['offset_x'])
+	DF = lambda x: DeltaFunctionGap(GammaR,GammaL,Delta,Phi,x+p.P['offset_x'])
 	Det = lambda x: DetGap(params_F,hfe,mu,x)
 	return -(DF(x)-U*mu)/Det(x)
 
@@ -72,13 +72,12 @@ def GreensFunction(params_F,hfe,mu,SEn_F,SEa_F,SEnStar_F,SEaStar_F,En_F,A):
 	"""	general form the Nambu Green's function and its determinant
 	A='band'/'gap' calculates determinant for band/gap """
 	[U,Delta,GammaR,GammaL,GammaNbar,Phi,eps] = params_F 
-	#hfe = eps+U*(n-0.5)
 	if A == 'band':
-		S_F = SFunctionBand(GammaR,GammaL,Delta,En_F+p.offset_x)
-		D_F = DeltaFunctionBand(GammaR,GammaL,Delta,Phi,En_F+p.offset_x)
+		S_F = SFunctionBand(GammaR,GammaL,Delta,En_F+p.P['offset_x'])
+		D_F = DeltaFunctionBand(GammaR,GammaL,Delta,Phi,En_F+p.P['offset_x'])
 	else:
-		S_F = SFunctionGap(GammaR,GammaL,Delta,En_F+p.offset_x)
-		D_F = DeltaFunctionGap(GammaR,GammaL,Delta,Phi,En_F+p.offset_x)
+		S_F = SFunctionGap(GammaR,GammaL,Delta,En_F+p.P['offset_x'])
+		D_F = DeltaFunctionGap(GammaR,GammaL,Delta,Phi,En_F+p.P['offset_x'])
 	Detn_F = (En_F*(1.0+S_F)+1.0j*GammaNbar-hfe-SEn_F)*(En_F*(1.0+S_F)+1.0j*GammaNbar+hfe-SEnStar_F)
 	Deta_F = (D_F-U*mu-SEa_F)*(D_F-U*mu-SEaStar_F)
 	Det_F = Detn_F-Deta_F
@@ -90,7 +89,7 @@ def GreensFunction(params_F,hfe,mu,SEn_F,SEa_F,SEnStar_F,SEaStar_F,En_F,A):
 #####################################################################
 # Hartree-Fock solver ###############################################
 
-def SolveHFssn(params_F,chat):
+def SolveHFssn(params_F,WriteIO):
 	""" HF equations solver for case with two SC and one normal lead """
 	[U,Delta,GammaR,GammaL,GammaNbar,Phi,eps] = params_F 
 	ed = eps-U/2.0		# localized energy level shifted to symmetry point
@@ -111,27 +110,29 @@ def SolveHFssn(params_F,chat):
 		n_old = 1e5
 		mu_old = 1e5
 		i = 0		# iterations counter
-		imax = p.HF_max_iter	# maximum number of iterations
-		while any([sp.fabs(mu-mu_old) > p.ConvHF, sp.fabs(n-n_old) > p.ConvHF]):
+		imax = p.P['HF_max_iter']	# maximum number of iterations
+		while any([sp.fabs(mu-mu_old) > p.P['ConvHF'], sp.fabs(n-n_old) > p.P['ConvHF']]):
 			n_old = n
 			mu_old = mu
 			hfe = ed+U*n
 			[D1,D2,D3] = MSums(params_F,hfe,mu,En_F)
-			#print(D1,D2,D3)
 			mu = -D3/(1.0-U*D1)
+			[D1,D2,D3] = MSums(params_F,hfe,mu,En_F)
 			if eps == 0: n = 0.5
 			else: n = (D2+ed*D1)/(1.0-U*D1)
 			hfe = ed+U*n
 			if i > imax: 
-				print "# Warning: SolveHF: No convergence after "+str(i)+" iterations, exit."
+				print('# Warning: SolveHF: No convergence after '+str(i)+' iterations, exit.')
 				n = mu = -1.0
 				ErrMsg = 1	
 				break
-			#if chat: print('# {0: 3d}\t n = {1: .6f} +{2: .6f}i,  mu = {3: .6f} +{4: .6f}i'\
-			#.format(i,float(sp.real(n)),float(sp.imag(n)),float(sp.real(mu)),float(sp.imag(mu))))
+			if WriteIO and i+1%100 == 0: print('# {0: 3d}\t n = {1: .6f} +{2: .6f}i,  mu = {3: .6f} +{4: .6f}i'\
+			.format(i+1,float(sp.real(n)),float(sp.imag(n)),float(sp.real(mu)),float(sp.imag(mu))))
+			#if WriteIO: print('# {0: 3d}\t n = {1: .6f} +{2: .6f}i,  mu = {3: .6f} +{4: .6f}i'\
+			#.format(i+1,float(sp.real(n)),float(sp.imag(n)),float(sp.real(mu)),float(sp.imag(mu))))
 			i += 1
-		if chat: print('# {0: 3d} iterations,\t n = {1: .6f} +{2: .6f}i,  mu = {3: .6f} +{4: .6f}i'\
-		.format(i-1,float(sp.real(n)),float(sp.imag(n)),float(sp.real(mu)),float(sp.imag(mu))))
+		if WriteIO: print('# {0: 3d} iterations,\t n = {1: .6f} +{2: .6f}i,  mu = {3: .6f} +{4: .6f}i'\
+		.format(i,float(sp.real(n)),float(sp.imag(n)),float(sp.real(mu)),float(sp.imag(mu))))
 	return sp.array([n,mu,ErrMsg])
 
 
@@ -198,16 +199,17 @@ def MSums(params_F,hfe,mu,En_F,*SE_L):
 	SE_L is an optional list of dynamic self-energies """
 	[U,Delta,GammaR,GammaL,GammaNbar,Phi,eps] = params_F 
 	## define lambdas
-	SFband  = lambda x: SFunctionBand(GammaR,GammaL,Delta,x+p.offset_x)
-	SFgap   = lambda x: SFunctionGap(GammaR,GammaL,Delta,x+p.offset_x)
-	DFband  = lambda x: DeltaFunctionBand(GammaR,GammaL,Delta,Phi,x+p.offset_x)
-	DFgap   = lambda x: DeltaFunctionGap(GammaR,GammaL,Delta,Phi,x+p.offset_x)
+	SFband  = lambda x: SFunctionBand(GammaR,GammaL,Delta,x+p.P['offset_x'])
+	SFgap   = lambda x: SFunctionGap(GammaR,GammaL,Delta,x+p.P['offset_x'])
+	DFband  = lambda x: DeltaFunctionBand(GammaR,GammaL,Delta,Phi,x+p.P['offset_x'])
+	DFgap   = lambda x: DeltaFunctionGap(GammaR,GammaL,Delta,Phi,x+p.P['offset_x'])
 	Detband = lambda x: DetBand(params_F,hfe,mu,x)
 	Detgap  = lambda x: DetGap(params_F,hfe,mu,x)
 	## find special points
 	dE = sp.around(En_F[1]-En_F[0],8)
 	dE_dec = int(-sp.log10(dE))
-	EdgePos = sp.nonzero(En_F == sp.around(-Delta,dE_dec))[0][0]
+	if Delta < sp.fabs(En_F[0]): EdgePos = sp.nonzero(En_F == sp.around(-Delta,dE_dec))[0][0]
+	else: EdgePos = 0
 	## fill arrays using lambdas
 	Det_F = sp.zeros_like(En_F,dtype = complex)
 	SF_F  = sp.zeros_like(En_F,dtype = complex)
@@ -218,8 +220,7 @@ def MSums(params_F,hfe,mu,En_F,*SE_L):
 	DF_F[EdgePos:]  = DFgap(En_F[EdgePos:])
 	Det_F[:EdgePos] = Detband(En_F[:EdgePos])
 	Det_F[EdgePos:] = Detgap(En_F[EdgePos:])
-	## dynamic self-energies
-	if len(SE_L) == 4:
+	if len(SE_L) == 4: 	## dynamic self-energies
 		SEn_F     = SE_L[0]
 		SEnStar_F = SE_L[1]
 		SEa_F     = SE_L[2]
@@ -230,12 +231,8 @@ def MSums(params_F,hfe,mu,En_F,*SE_L):
 			SEnStar_F[EdgePos:],SEaStar_F[EdgePos:],En_F[EdgePos:],'gap')
 		Det_F[:EdgePos] = Det1_F
 		Det_F[EdgePos:] = Det2_F
-	## Hartree-Fock only
-	else:
+	else: 	## Hartree-Fock only
 		SEnStar_F = SEa_F = sp.zeros_like(En_F)
-	#for i in range(len(En_F)):
-	#	print En_F[i],'\t',sp.real(SF_F[i]),'\t',sp.imag(SF_F[i]),'\t',sp.real(DF_F[i]),'\t',sp.imag(DF_F[i])
-	#exit()
 	## Matsubara sum of 1/D(iw):
 	Int1_F = sp.imag(1.0/Det_F)
 	## Matsubara sum of iw(1+s(iw))/D(iw)
@@ -263,8 +260,8 @@ def ElectronDensity(params_F,n,mu,En_F,SEn_F,SEa_F):
 	MSums_F = MSums(params_F,hfe,mu,En_F[:N/2+1],SEn_F[:N/2+1],SEnStar_F[:N/2+1],\
 	SEa_F[:N/2+1],SEaStar_F[:N/2+1])
 	n = sp.real_if_close((MSums_F[1]+ed*MSums_F[0])/(1.0-U*MSums_F[0]))
-	if sp.imag(n) > 0.0: print '# Warning: non-zero imaginary part \
-	of n: {0: .5f}, discarding imag. part.'.format(float(sp.imag(n)))
+	if sp.imag(n) > 0.0: print('# Warning: non-zero imaginary part \
+	of n: {0: .5f}, discarding imag. part.'.format(float(sp.imag(n))))
 	return sp.real(n)
 
 
@@ -279,9 +276,40 @@ def CooperPairDensity(params_F,n,mu,En_F,SEn_F,SEa_F):
 	MSums_F = MSums(params_F,hfe,mu,En_F[:N/2+1],SEn_F[:N/2+1],SEnStar_F[:N/2+1],\
 	SEa_F[:N/2+1],SEaStar_F[:N/2+1])
 	mu =  sp.real_if_close(-MSums_F[2]/(1.0-U*MSums_F[0]))
-	if sp.imag(mu) > 0.0: print '# Warning: non-zero imaginary part \
-	of mu: {0: .5f}, discarding imag. part.'.format(float(sp.imag(mu)))
+	if sp.imag(mu) > 0.0: print('# Warning: non-zero imaginary part \
+	of mu: {0: .5f}, discarding imag. part.'.format(float(sp.imag(mu))))
 	return sp.real(mu)
+
+#####################################################################
+# Josephson current and conductance #################################
+
+def JosephsonCurrent(GFa_F,En_F,params_F,direction):
+	""" Josephson current flowing from 'direction' lead to the other one
+	direction = 'R' (right) or 'L' (left) 
+	returns separately the band and the gap contributions """
+	[U,Delta,GammaR,GammaL,GammaNbar,Phi,eps] = params_F 
+	Gamma = GammaR if direction == 'R' else -GammaL
+	MultFac = -4.0*Delta*Gamma*sp.sin(Phi/2.0)
+	## define lambdas
+	SFband  = lambda x: SFunctionBand(GammaR,GammaL,Delta,x+p.P['offset_x'])
+	SFgap   = lambda x: SFunctionGap(GammaR,GammaL,Delta,x+p.P['offset_x'])
+	# find band edge
+	[EdgePos1,EdgePos2] = FindEdges(En_F,Delta)
+	# integrate separately band and gap
+	if Delta < sp.fabs(En_F[0]): # finite gap
+		Int1_F  = sp.real(GFa_F[:EdgePos1])*sp.imag(SFband(En_F[:EdgePos1]))
+		I1 = sp.real_if_close(simps(Int1_F,En_F[:EdgePos1]))/sp.pi
+	else: I1 = 0.0
+	Int2_F  = sp.imag(GFa_F[EdgePos1:len(En_F)/2+1])*SFgap(En_F[EdgePos1:len(En_F)/2+1])
+	I2 = sp.real_if_close(simps(Int2_F,En_F[EdgePos1:len(En_F)/2+1]))/sp.pi
+	return [MultFac*I1,MultFac*I2]
+	
+
+def AndreevConductance(GFa_F,En_F,params_F):
+	""" zero-bias differential conductance between SC lead and normal lead """
+	[U,Delta,GammaR,GammaL,GammaNbar,Phi,eps] = params_F
+	GFaZero = GFa_F[len(GFa_F)/2]
+	return sp.real_if_close(4.0*GammaNbar**2*GFaZero*sp.conj(GFaZero))
 
 
 #####################################################################
@@ -296,28 +324,22 @@ def FillGreenHF(params_F,hfe,mu,En_F):
 	GFn_gap  = lambda x: GFnGap(params_F,hfe,mu,x)
 	GFa_gap  = lambda x: GFaGap(params_F,hfe,mu,x)
 	## find the frequency mesh
-	dE = sp.around(En_F[1]-En_F[0],8)
-	dE_dec = int(-sp.log10(dE))
 	zero_F = sp.array([0.0])	# zero as an array
 	## find special points
-	EdgePos1 = sp.nonzero(En_F == sp.around(-Delta,dE_dec))[0][0]
-	EdgePos2 = sp.nonzero(En_F == sp.around( Delta,dE_dec))[0][0]
+	[EdgePos1,EdgePos2] = FindEdges(En_F,Delta)
 	## fill the arrays
 	GFn_F = sp.concatenate((GFn_band(En_F[:EdgePos1]),zero_F,GFn_gap(En_F[EdgePos1+1:EdgePos2])\
 	,zero_F,GFn_band(En_F[EdgePos2+1:])))
 	GFa_F = sp.concatenate((GFa_band(En_F[:EdgePos1]),zero_F,GFa_gap(En_F[EdgePos1+1:EdgePos2])\
 	,zero_F,GFa_band(En_F[EdgePos2+1:])))
-	return [GFn_F,GFa_F,EdgePos1,EdgePos2]
+	return [GFn_F,GFa_F]
 
 
 def FillGreensFunction(params_F,n,mu,SEn_F,SEa_F,En_F):
 	""" calculating the interacting Green's function using the Dyson equation """
 	[U,Delta,GammaR,GammaL,GammaNbar,Phi,eps] = params_F 
 	hfe = eps+U*(n-0.5)
-	dE = sp.around(En_F[1]-En_F[0],8)
-	dE_dec = int(-sp.log10(dE))
-	EdgePos1 = sp.nonzero(En_F == sp.around(-Delta,dE_dec))[0][0]
-	EdgePos2 = sp.nonzero(En_F == sp.around( Delta,dE_dec))[0][0]
+	[EdgePos1,EdgePos2] = FindEdges(En_F,Delta)
 	## hole / anti-cooperon self-energies
 	SEnStar_F = -sp.flipud(sp.conj(SEn_F))
 	SEaStar_F =  sp.flipud(sp.conj(SEa_F))
@@ -336,15 +358,12 @@ def FillGreensFunction(params_F,n,mu,SEn_F,SEa_F,En_F):
 
 
 #####################################################################
-# Auxiliary functions ###############################################
+# auxiliary functions ###############################################
 
 def PrintDet(params_F,hfe,mu,En_F):
 	""" print the determinant for testing purposes """
 	[U,Delta,GammaR,GammaL,GammaNbar,Phi,eps] = params_F 
-	dE = sp.around(En_F[1]-En_F[0],8)
-	dE_dec = int(-sp.log10(dE))
-	EdgePos1 = sp.nonzero(En_F == sp.around(-Delta,dE_dec))[0][0]
-	EdgePos2 = sp.nonzero(En_F == sp.around(Delta,dE_dec))[0][0]
+	[EdgePos1,EdgePos2] = FindEdges(En_F,Delta)
 	Det_F = sp.zeros_like(En_F,dtype = complex)
 	Detband = lambda x: DetBand(params_F,hfe,mu,x)
 	Detgap  = lambda x: DetGap(params_F,hfe,mu,x)
@@ -352,7 +371,17 @@ def PrintDet(params_F,hfe,mu,En_F):
 	Det_F[EdgePos1:EdgePos2] = Detgap(En_F[EdgePos1:EdgePos2])
 	Det_F[EdgePos2:] = Detband(En_F[EdgePos2:])
 	for i in range(len(En_F)):
-		print En_F[i],'\t',sp.real(Det_F[i]),'\t',sp.imag(Det_F[i])
+		print('{0: .6f}\t{1: .6f}\t{2: .6f}'\
+		.format(float(En_F[i]),float(sp.real(Det_F[i])),float(sp.imag(Det_F[i]))))
+
+
+def ZeroEnergyDiff(GFn_F,En_F,params_F):
+	""" determines if the value at Fermi energy is a minimum or maximum """
+	[U,Delta,GammaR,GammaL,GammaNbar,Phi,eps] = params_F
+	[DPos1,DPos2] = FindEdges(En_F,Delta/4.0)
+	from scipy.interpolate import InterpolatedUnivariateSpline
+	F = InterpolatedUnivariateSpline(En_F[DPos1:DPos2],-sp.imag(GFn_F[DPos1:DPos2])/sp.pi)
+	return [F(0),F.derivatives(0)[1],F.derivatives(0)[2]]
 
 ## ssnlib.py end ##
 

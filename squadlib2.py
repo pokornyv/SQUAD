@@ -7,7 +7,7 @@ import scipy as sp
 from scipy.integrate import trapz,simps
 from scipy.fftpack import fft,ifft
 from scipy.interpolate import InterpolatedUnivariateSpline,UnivariateSpline
-from squadlib1 import SFunctionBand,SFunctionGap,DeltaFunctionBand,DeltaFunctionGap
+from squadlib1 import SFunctionBand,SFunctionGap,DeltaFunctionBand,DeltaFunctionGap,FindEdges
 from sys import exit
 
 #####################################################################
@@ -22,7 +22,9 @@ def WriteFile(En_F,Xn_F,Xa_F,params_F,pole_pos,f_type,Emax,NE):
 	from time import ctime
 	[U,Delta,GammaR,GammaL,GammaNbar,Phi,eps] = params_F
 	P = sp.around(Phi/sp.pi,3)
-	GammaLR = GammaL/GammaR
+	#if GammaR != 0.0: 
+	GammaLR = GammaL/GammaR if GammaR != 0.0 else 1.0
+	#else: GammaLR = 1.0
 	GammaN = 2.0*GammaNbar
 	dE = sp.around(En_F[1]-En_F[0],8)
 	dE_dec = int(-sp.log10(dE))
@@ -30,7 +32,7 @@ def WriteFile(En_F,Xn_F,Xa_F,params_F,pole_pos,f_type,Emax,NE):
 	kmax = sp.nonzero(En_F == sp.around(Emax,dE_dec))[0][0]+1
 	filename = 'U'+str(U)+'D'+str(Delta)+'GR'+str(GammaR)+'GLR'+str(sp.around(GammaLR,2))+'e'+str(eps)+'P'+str(P)
 	f = open(filename+f_type+'.dat','w')
-	text_header = '# U='+str(U)+', Delta='+str(Delta)+', eps='+str(eps)+', Phi/pi='+str(P)\
+	text_header = '# U='+str(U)+', Delta='+str(Delta)+', eps='+str(eps-U/2.0)+', Phi/pi='+str(P)\
 	+'\n# GammaR='+str(GammaR)+', GammaL='+str(GammaL)+', GammaL/GammaR='+str(GammaLR)+', GammaN='+str(GammaN)+'\n'
 	f.write(text_header)
 	ver = str(version_info[0])+'.'+str(version_info[1])+'.'+str(version_info[2])
@@ -198,9 +200,8 @@ def GreensFunction(params_F,n,mu,SEn_F,SEa_F,SEnStar_F,SEaStar_F,En_F,A):
 	ABS in gap are not included, must be calculated separately
 	A='band' calculates determinant for band
 	A='gap' calculates determinant for gap """
-	[U,Delta,GammaR,GammaL,GammaN,P,eps] = params_F
+	[U,Delta,GammaR,GammaL,GammaN,Phi,eps] = params_F
 	hfe = eps+U*(n-0.5)
-	Phi = P*sp.pi
 	if A == 'band':
 		S_F = SFunctionBand(GammaR,GammaL,Delta,En_F)
 		D_F = DeltaFunctionBand(GammaR,GammaL,Delta,Phi,En_F)
@@ -218,18 +219,19 @@ def GreensFunction(params_F,n,mu,SEn_F,SEa_F,SEnStar_F,SEaStar_F,En_F,A):
 def FindABS(Det_F,En_F,Delta):
 	"""	determines the energies of ABS as zeroes of GF determinant """
 	from subprocess import call
-	dz = sp.around(En_F[1]-En_F[0],8)
-	dz_dec = int(-sp.log10(dz))
-	EdgePos1 = sp.nonzero(En_F == sp.around(-Delta,dz_dec))[0][0]
-	EdgePos2 = sp.nonzero(En_F == sp.around( Delta,dz_dec))[0][0]
+	dE = sp.around(En_F[1]-En_F[0],8)
+	dE_dec = int(-sp.log10(dE))
+	[EdgePos1,EdgePos2] = FindEdges(En_F,Delta)
+	#EdgePos1 = sp.nonzero(En_F == sp.around(-Delta,dE_dec))[0][0]
+	#EdgePos2 = sp.nonzero(En_F == sp.around( Delta,dE_dec))[0][0]
 	DetG = InterpolatedUnivariateSpline(En_F[EdgePos1+1:EdgePos2],sp.real(Det_F[:]))
 	RootsG_F = DetG.roots()
 	if len(RootsG_F) == 0:	
 		## ABS states too close to gap edges or
 		## this also happens when using brentq to calculate densities: 
 		## it starts from wrong fist guess (lower end of bracketing interval)
-		print "# Warning: FindABS: determinant of GF has no poles, taking \pm dz"
-		ABS_F = sp.array([-Delta+2.0*dz,Delta-2.0*dz])
+		print "# Warning: FindABS: determinant of GF has no poles, taking \pm dE"
+		ABS_F = sp.array([-Delta+2.0*dE,Delta-2.0*dE])
 		ABSpos_F = sp.array([EdgePos1+1,EdgePos2-1])
 		Diff_F = sp.array([DetG.derivatives(ABS_F[0])[1],DetG.derivatives(ABS_F[1])[1]])
 	elif len(RootsG_F) == 1: 
@@ -240,7 +242,7 @@ def FindABS(Det_F,En_F,Delta):
 		Diff_F = sp.zeros(2)
 		ABS_F = [-sp.fabs(RootsG_F[0]),sp.fabs(RootsG_F[0])]
 		for i in range(2):
-			ABSpos_F[i] = sp.nonzero(En_F == sp.around(ABS_F[i],dz_dec))[0][0]
+			ABSpos_F[i] = sp.nonzero(En_F == sp.around(ABS_F[i],dE_dec))[0][0]
 			print '# ABSpos:',ABSpos_F
 			Diff_F[i] = DetG.derivatives(ABS_F[i])[1]
 			print '# dD/dw:',Diff_F
@@ -251,7 +253,7 @@ def FindABS(Det_F,En_F,Delta):
 		Diff_F = sp.zeros(2)
 		for i in range(2):
 			ABS_F[i] = RootsG_F[i]
-			ABSpos_F[i] = sp.nonzero(En_F == sp.around(RootsG_F[i],dz_dec))[0][0]
+			ABSpos_F[i] = sp.nonzero(En_F == sp.around(RootsG_F[i],dE_dec))[0][0]
 			Diff_F[i] = DetG.derivatives(RootsG_F[i])[1]
 	elif len(RootsG_F) == 6:	
 		## four ABS states, other two zeros are in fact poles
@@ -261,7 +263,7 @@ def FindABS(Det_F,En_F,Delta):
 		D = {0:1, 1:2, 2:3, 3:4}	# maps ABS to zeros of determinant, excludes poles
 		for i in range(4):
 			ABS_F[i] = RootsG_F[D[i]]
-			ABSpos_F[i] = sp.nonzero(En_F == sp.around(RootsG_F[D[i]],dz_dec))[0][0]
+			ABSpos_F[i] = sp.nonzero(En_F == sp.around(RootsG_F[D[i]],dE_dec))[0][0]
 			Diff_F[i] = DetG.derivatives(RootsG_F[D[i]])[1]
 		## taking two inner poles only
 		ABS_F = sp.array([ABS_F[1],ABS_F[2]])
@@ -278,7 +280,7 @@ def FindABS(Det_F,En_F,Delta):
 		Diff_F = sp.zeros(2)
 		ABS_F = [-sp.fabs(RootsG_F[NABS/2]),sp.fabs(RootsG_F[NABS/2])]
 		for i in range(2):
-			ABSpos_F[i] = sp.nonzero(En_F == sp.around(ABS_F[i],dz_dec))[0][0]
+			ABSpos_F[i] = sp.nonzero(En_F == sp.around(ABS_F[i],dE_dec))[0][0]
 			Diff_F[i] = DetG.derivatives(ABS_F[i])[1]
 	if len(ABS_F) != 2: 
 		## just in case we miss the fact we have more poles than two
@@ -290,14 +292,14 @@ def FillGreensFunction(params_F,n,mu,SEn_F,SEa_F,En_F):
 	""" calculating the interacting Green's function using the Dyson equation
 	weights of ABS are calculated numerically from determinant, 
 	real parts are recalculated using KK relations """
-	[U,Delta,GammaR,GammaL,GammaN,P,eps] = params_F
+	[U,Delta,GammaR,GammaL,GammaN,Phi,eps] = params_F
 	hfe = eps+U*(n-0.5)
-	Phi = P*sp.pi
-	dz = sp.around(En_F[1]-En_F[0],8)
-	dz_dec = int(-sp.log10(dz))
+	dE = sp.around(En_F[1]-En_F[0],8)
+	dE_dec = int(-sp.log10(dE))
 	## find special points
-	EdgePos1 = sp.nonzero(En_F == sp.around(-Delta,dz_dec))[0][0]
-	EdgePos2 = sp.nonzero(En_F == sp.around( Delta,dz_dec))[0][0]
+	[EdgePos1,EdgePos2] = FindEdges(En_F,Delta)
+	#EdgePos1 = sp.nonzero(En_F == sp.around(-Delta,dE_dec))[0][0]
+	#EdgePos2 = sp.nonzero(En_F == sp.around( Delta,dE_dec))[0][0]
 	SEnStar_F = -sp.flipud(sp.conj(SEn_F))	# hole self-energies
 	SEaStar_F =  sp.flipud(sp.conj(SEa_F))
 	## calculate GF separately in band and in gap regions
@@ -329,16 +331,16 @@ def FillGreensFunction(params_F,n,mu,SEn_F,SEa_F,En_F):
 		Df_F[i] = DeltaFunctionGap(GammaR,GammaL,Delta,Phi,ABS_F[i])
 		ResGn_F[i] =  sp.real((ABS_F[i]*(1.0+Sf_F[i])+hfe-SigmanStar(ABS_F[i]))/Diff_F[i])
 		ResGa_F[i] = -sp.real((Df_F[i]-U*mu-Sigmaa(ABS_F[i]))/Diff_F[i])
-		GFn_F[ABSpos_F[i]] = -1.0j*ResGn_F[i]*sp.pi/dz
-		GFa_F[ABSpos_F[i]] = -1.0j*ResGa_F[i]*sp.pi/dz
+		GFn_F[ABSpos_F[i]] = -1.0j*ResGn_F[i]*sp.pi/dE
+		GFa_F[ABSpos_F[i]] = -1.0j*ResGa_F[i]*sp.pi/dE
 	Res_F = sp.concatenate([ResGn_F,ResGa_F])
 	## find real part from imaginary using KK relations
 	GFn_F = KramersKronigFFT_ABS(sp.imag(GFn_F),En_F,ABSpos_F,ResGn_F)+1.0j*sp.imag(GFn_F)
 	GFa_F = KramersKronigFFT_ABS(sp.imag(GFa_F),En_F,ABSpos_F,ResGa_F)+1.0j*sp.imag(GFa_F)
 	## add residues to ABS frequencies
 	for i in range(NABS):
-		GFn_F[ABSpos_F[i]] = -1.0j*ResGn_F[i]*sp.pi/dz
-		GFa_F[ABSpos_F[i]] = -1.0j*ResGa_F[i]*sp.pi/dz
+		GFn_F[ABSpos_F[i]] = -1.0j*ResGn_F[i]*sp.pi/dE
+		GFa_F[ABSpos_F[i]] = -1.0j*ResGa_F[i]*sp.pi/dE
 	return [GFn_F,GFa_F,Det_F,ABS_F,ABSpos_F,Res_F]
 
 
@@ -353,13 +355,13 @@ def MSumsInt(params_F,n,mu,SEn_F,SEa_F,Zn_F):
 	"""	calculating Matsubara sums used in calculating n and mu from interacting GF
 	returning three sums M, n = M[1]/(1-U*M[0]), mu = -M[2]/(1-U*M[0])
 	this approach is numerically more precise than integrating the GF """
-	[U,Delta,GammaR,GammaL,GammaN,P,eps] = params_F
+	[U,Delta,GammaR,GammaL,GammaN,Phi,eps] = params_F
 	ed = eps-U/2.0
-	Phi = P*sp.pi
 	dz = sp.around(Zn_F[1] - Zn_F[0],8)
-	dz_dec = int(-sp.log10(dz))
-	EdgePos1 = sp.nonzero(Zn_F == sp.around(-Delta,dz_dec))[0][0]
-	EdgePos2 = sp.nonzero(Zn_F == sp.around( Delta,dz_dec))[0][0]
+	#dz_dec = int(-sp.log10(dz))
+	[EdgePos1,EdgePos2] = FindEdges(Zn_F,Delta)
+	#EdgePos1 = sp.nonzero(Zn_F == sp.around(-Delta,dz_dec))[0][0]
+	#EdgePos2 = sp.nonzero(Zn_F == sp.around( Delta,dz_dec))[0][0]
 	SEnStar_F = -sp.flipud(sp.conj(SEn_F))	# hole self-energies
 	SEaStar_F =  sp.flipud(sp.conj(SEa_F))
 	[GFn1_F,GFa1_F,Det1_F] = GreensFunction(params_F,n,mu,SEn_F[:EdgePos1],SEa_F[:EdgePos1],\
@@ -370,19 +372,24 @@ def MSumsInt(params_F,n,mu,SEn_F,SEa_F,Zn_F):
 		SEnStar_F[EdgePos2+1:],SEaStar_F[EdgePos2+1:],Zn_F[EdgePos2+1:],'band')
 	[ABS_F,Diff_F,ABSpos_F] = FindABS(Det2_F,Zn_F,Delta)
 	Band_F = Zn_F[:EdgePos1]
-	S_F = SFunctionBand(GammaR,GammaL,Delta,Band_F)
-	D_F = DeltaFunctionBand(GammaR,GammaL,Delta,Phi,Band_F)
-	Nom2_F = Band_F*(1.0+S_F)+ed-SEnStar_F[:EdgePos1]
-	Nom3_F = D_F-SEa_F[:EdgePos1]
-	Int1_F = sp.imag(1.0/Det1_F)
-	Int2_F = sp.imag(Nom2_F/Det1_F)
-	Int3_F = sp.imag(Nom3_F/Det1_F)
-	Tail1 = -Int1_F[0]*Zn_F[0]/2.0		# behaves as 1/x^3
-	Tail2 = -Int2_F[0]*Zn_F[0]			# behaves as 1/x^2
-	Tail3 = -Int3_F[0]*Zn_F[0]/2.0		# behaves as 1/x^3
-	Head1 = 0.5*dz*Int1_F[-1]
-	Head2 = 0.5*dz*Int2_F[-1]
-	Head3 = 0.5*dz*Int3_F[-1]
+	if len(Band_F) > 0: # Delta smaller than energy minimum
+		S_F = SFunctionBand(GammaR,GammaL,Delta,Band_F)
+		D_F = DeltaFunctionBand(GammaR,GammaL,Delta,Phi,Band_F)
+		Nom2_F = Band_F*(1.0+S_F)+ed-SEnStar_F[:EdgePos1]
+		Nom3_F = D_F-SEa_F[:EdgePos1]
+		Int1_F = sp.imag(1.0/Det1_F)
+		Int2_F = sp.imag(Nom2_F/Det1_F)
+		Int3_F = sp.imag(Nom3_F/Det1_F)
+		Tail1 = -Int1_F[0]*Zn_F[0]/2.0		# behaves as 1/x^3
+		Tail2 = -Int2_F[0]*Zn_F[0]			# behaves as 1/x^2
+		Tail3 = -Int3_F[0]*Zn_F[0]/2.0		# behaves as 1/x^3
+		Head1 = 0.5*dz*Int1_F[-1]
+		Head2 = 0.5*dz*Int2_F[-1]
+		Head3 = 0.5*dz*Int3_F[-1]
+	else: # large Delta
+		Int1_F = Int2_F = Int3_F = sp.zeros(1)
+		Tail1 = Tail2 = Tail3 = 0.0
+		Head1 = Head2 = Head3 = 0.0
 	if len(ABS_F) == 2:
 		Swzero = SFunctionGap(GammaR,GammaL,Delta,ABS_F[0])
 		Dwzero = DeltaFunctionGap(GammaR,GammaL,Delta,Phi,ABS_F[0])
@@ -415,8 +422,8 @@ def MSumsInt(params_F,n,mu,SEn_F,SEa_F,Zn_F):
 def ElectronDensity(params_F,n,mu,SEn_F,SEa_F,En_F):
 	"""	calculating n from Matsbara sums MSumsInt """
 	U = params_F[0]
-	RPASums = MSumsInt(params_F,n,mu,SEn_F,SEa_F,En_F)
-	n = sp.real_if_close(RPASums[1]/(1.0 - U*RPASums[0]))
+	MSums_F = MSumsInt(params_F,n,mu,SEn_F,SEa_F,En_F)
+	n = sp.real_if_close(MSums_F[1]/(1.0 - U*MSums_F[0]))
 	if sp.imag(n) > 0.0: print '# Warning: non-zero imag. part of n: {0: .8f}'.format(float(sp.imag(n)))
 	return sp.real(n)
 
@@ -424,8 +431,8 @@ def ElectronDensity(params_F,n,mu,SEn_F,SEa_F,En_F):
 def CooperPairDensity(params_F,n,mu,SEn_F,SEa_F,En_F):
 	""" calculating mu from Matsbara sums MSumsInt """
 	U = params_F[0]
-	RPASums = MSumsInt(params_F,n,mu,SEn_F,SEa_F,En_F)
-	mu =  sp.real_if_close(-RPASums[2]/(1.0 - U*RPASums[0]))
+	MSums_F = MSumsInt(params_F,n,mu,SEn_F,SEa_F,En_F)
+	mu =  sp.real_if_close(-MSums_F[2]/(1.0 - U*MSums_F[0]))
 	if sp.imag(mu) > 0.0: print '# Warning: non-zero imag. part of mu: {0: .8f}'.format(float(sp.imag(mu)))
 	return sp.real(mu)
 

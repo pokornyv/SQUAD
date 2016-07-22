@@ -23,6 +23,11 @@ In case of interest please contact me at pokornyv@fzu.cz.
 - direct access to spectral functions and Andreev bound states frequencies  
 - reliable description of the zero-phase and zero-pi boundary  
 
+**Solution for infinite Delta:**  
+This code also allows to calculate an approximation of the system with infinitely large gap. Setting Delta large 
+(e.g. 1e5 and larger) usually gives a solution numerically correct to 4-5 decimal places. Be sure you set Delta larger
+thatn the maximum of the energy axis to get rid of the band contributions.  
+
 **List of files:**  
 - *squadlib1.py* - library of general functions and the HF solver  
 - *squadlib2.py* - library of functions for calculating 2nd order PT  
@@ -36,7 +41,7 @@ including the dynamical part. Unstable in some regions of parameter space.
 sc electrodes  
 - *ssnlib.py* - library of functions for calculating ssn results  
 - *params.py* - script to read ssn.in file  
-- *ssn.in* - parameter file for *ssn_second.py*, read by *params.py*  
+- *ssn.in* - parameter file for *ssn_second.py*, read by *params.py*, described in *ssn_infile.md*
 - *run_ssn.py* - script to run *ssn_second.py* for a range of parameters  
 
 **References:**  

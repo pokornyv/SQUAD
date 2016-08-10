@@ -26,7 +26,7 @@ while x < xmax + dx:
 	elif par == 3: P      = x
 	elif par == 4: GammaR = x
 	else: Gamma = x
-	comm="python second_sc.py "+str(U)+" "+str(Delta)+" "+str(GammaR)+" "+str(GammaLR)+" "+str(en)+" "+str(P)+" 0"
+	comm="python second_sc.py "+str(U)+" "+str(Delta)+" "+str(GammaR)+" "+str(GammaLR)+" "+str(en)+" "+str(P)
 	k = system(comm)
 	if k != 0: break
 	x = x + dx

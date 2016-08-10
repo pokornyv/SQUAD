@@ -1,6 +1,3 @@
----
-output: pdf_document
----
 SQUAD
 =====
 **Description:**  
@@ -24,24 +21,22 @@ In case of interest please contact me at pokornyv@fzu.cz.
 - reliable description of the zero-phase and zero-pi boundary  
 
 **Solution for infinite Delta:**  
-This code also allows to calculate an approximation of the system with infinitely large gap. Setting Delta large 
-(e.g. 1e5 and larger) usually gives a solution numerically correct to 4-5 decimal places. Be sure you set Delta larger
+The code solving the ssn system allows to calculate an approximation of the system with infinitely large gap. Setting Delta large 
+(e.g. 1e7 and larger) usually gives a solution numerically correct to 4-5 decimal places. Be sure you set Delta larger
 thatn the maximum of the energy axis to get rid of the band contributions.  
 
 **List of files:**  
 - *squadlib1.py* - library of general functions and the HF solver  
 - *squadlib2.py* - library of functions for calculating 2nd order PT  
 - *second_sc.py* - main code to calculate 2nd order PT results for a system with two sc electrodes  
-This code uses self-consistency in the static part of self-energies only.  
-- *second_fullsc.py* - modified second_sc code that incoroprates full self-consistent calculation of self-energies, 
-including the dynamical part. Unstable in some regions of parameter space.  
-- *run_2nd.py* - script to run *second_sc.py* for a range of parameters  
-- *run_2nd_full.py* - script to run *second_fullsc.py* for a range of parameters  
 - *ssn_second.py* - main code to calculate 2nd order PT results in a system with one normal and two
 sc electrodes  
 - *ssnlib.py* - library of functions for calculating ssn results  
-- *params.py* - script to read ssn.in file  
-- *ssn.in* - parameter file for *ssn_second.py*, read by *params.py*, described in *ssn_infile.md*
+- *params_ss.py* - script to read ss.in file  
+- *params_ssn.py* - script to read ssn.in file  
+- *ss.in* - parameter file for *second_sc.py*, read by *params_ss.py*  
+- *ssn.in* - parameter file for *ssn_second.py*, read by *params_ssn.py*, described in *ssn_infile.md*  
+- *run_2nd.py* - script to run *second_sc.py* for a range of parameters  
 - *run_ssn.py* - script to run *ssn_second.py* for a range of parameters  
 
 **References:**  

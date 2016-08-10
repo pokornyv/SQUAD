@@ -27,6 +27,7 @@ sc and one normal electrodes.
 - WriteFile_Bub    :  0/1 switch whether the file with HF bubble should be written  
 - WriteFile_2ndSE  :  0/1 switch whether the file with 2nd-order self-energy should be written  
 - WriteFile_2ndGF  :  0/1 switch whether the file with 2nd-order Green function should be written  
+- Write_AC         :  0/1 switch whether the file with Andreev conductance should be written  
   
 - EmaxFiles : maximum of the energy window for file output. Default: 10  
 - EstepFiles : step in energies for file output. The values will be written with EstepFiles x dE step. Default: 10  

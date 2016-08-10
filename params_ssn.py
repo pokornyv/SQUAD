@@ -29,6 +29,7 @@ P['Write_HFGF']   = 0
 P['Write_Bubble'] = 0
 P['Write_2ndSE']  = 0
 P['Write_2ndGF']  = 1
+P['Write_AC']     = 0
 P['EmaxFiles']    = 10.0
 P['EstepFiles']   = 10
 
@@ -36,7 +37,7 @@ P['EstepFiles']   = 10
 
 params_int_L = ['M','HF_max_iter','EstepFiles']
 params_float_L = ['dE','ConvN','ConvX','ConvHF','MuMin','MuMax','offset_x','EmaxFiles']
-params_bool_L = ['WriteIO','Write_HFGF','Write_Bubble','Write_2ndSE','Write_2ndGF']
+params_bool_L = ['WriteIO','Write_HFGF','Write_Bubble','Write_2ndSE','Write_2ndGF','Write_AC']
 
 for sec in config.sections():
 	for opt in config.options(sec):

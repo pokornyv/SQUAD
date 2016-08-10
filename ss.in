@@ -1,0 +1,28 @@
+; these parameters are described in ssn_infile.md
+
+[params]
+
+M                :  20
+dE               :  1e-4
+rootf            :  brentq
+;rootf            :  fixed_point
+ConvN            :  1e-4
+ConvX            :  1e-5
+ConvHF           :  1e-6
+MuMin            : -2.0
+MuMax            :  2.0
+HF_max_iter      :  10000
+offset_x         :  1e-12
+
+[IO]
+
+WriteIO    	 :  1
+
+Write_HFGF   :  0
+Write_Bub    :  0
+Write_2ndSE  :  0
+Write_2ndGF  :  1
+
+EmaxFiles    :  10
+EstepFiles   :  10
+

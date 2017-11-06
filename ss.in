@@ -19,8 +19,8 @@ offset_x         :  1e-12
 WriteIO    	 :  1
 
 Write_HFGF   :  0
-Write_Bub    :  0
-Write_2ndSE  :  0
+Write_Bubble :  0
+Write_2ndSE  :  1
 Write_2ndGF  :  1
 
 EmaxFiles    :  10

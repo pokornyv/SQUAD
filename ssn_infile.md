@@ -1,9 +1,8 @@
 Description of the *ssn.in* file
 ================================
 
-The file *ssn.in* defines various parameters used by the
-*ssn_second.py* code that calculates properties of a system with two 
-sc and one normal electrodes.  
+File *ss.in* and *ssn.in* defines various parameters used by the
+*second_sc.py* and *ssn_second.py* codes.  
   
 ##Description
 
@@ -22,12 +21,12 @@ sc and one normal electrodes.
 
 ###[IO] section
   
-- WriteIO :  0/1 switch whether we want to write calculation details to standard output (e.g. screen)  
+- WriteIO          :  0/1 switch whether we want to write calculation details to standard output (e.g. screen)  
 - WriteFile_HFGF   :  0/1 switch whether the file with HF Green function should be written  
 - WriteFile_Bub    :  0/1 switch whether the file with HF bubble should be written  
 - WriteFile_2ndSE  :  0/1 switch whether the file with 2nd-order self-energy should be written  
 - WriteFile_2ndGF  :  0/1 switch whether the file with 2nd-order Green function should be written  
-- Write_AC         :  0/1 switch whether the file with Andreev conductance should be written  
-  
+- Write_AC         :  0/1 switch whether the file with Andreev conductance should be written (ssn only)  
 - EmaxFiles : maximum of the energy window for file output. Default: 10  
 - EstepFiles : step in energies for file output. The values will be written with EstepFiles x dE step. Default: 10  
+

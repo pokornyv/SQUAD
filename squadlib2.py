@@ -20,7 +20,7 @@ def WriteFile(En_F,Xn_F,Xa_F,params_F,pole_pos,f_type,Emax,NE):
 	"""	writes an output file suitable for gnuplot
 	range for output is (-Emax:Emax) with step NE x dE
 	pole_pos guarantees we don't miss the pole """
-	[U,Delta,GammaR,GammaL,GammaNbar,Phi,eps] = params_F
+	[U,Delta,GammaR,GammaL,GammaNbar,Phi,eps,h] = params_F
 	P = sp.around(Phi/sp.pi,3)
 	GammaLR = GammaL/GammaR if GammaR != 0.0 else 1.0
 	GammaN = 2.0*GammaNbar
@@ -200,7 +200,7 @@ def GreensFunction(params_F,n,mu,SEn_F,SEa_F,SEnStar_F,SEaStar_F,En_F,A):
 	ABS in gap are not included, must be calculated separately
 	A='band' calculates determinant for band
 	A='gap' calculates determinant for gap """
-	[U,Delta,GammaR,GammaL,GammaN,Phi,eps] = params_F
+	[U,Delta,GammaR,GammaL,GammaN,Phi,eps,h] = params_F
 	hfe = eps+U*(n-0.5)
 	if A == 'band':
 		S_F = SFunctionBand(GammaR,GammaL,Delta,En_F)
@@ -230,7 +230,7 @@ def FindABS(Det_F,En_F,Delta):
 		## ABS states too close to gap edges or
 		## this also happens when using brentq to calculate densities: 
 		## it starts from wrong fist guess (lower end of bracketing interval)
-		print "# Warning: FindABS: determinant of GF has no poles, taking \pm dE"
+		#print "# Warning: FindABS: determinant of GF has no poles, taking \pm dE"
 		ABS_F = sp.array([-Delta+2.0*dE,Delta-2.0*dE])
 		ABSpos_F = sp.array([EdgePos1+1,EdgePos2-1])
 		Diff_F = sp.array([DetG.derivatives(ABS_F[0])[1],DetG.derivatives(ABS_F[1])[1]])
@@ -243,9 +243,9 @@ def FindABS(Det_F,En_F,Delta):
 		ABS_F = [-sp.fabs(RootsG_F[0]),sp.fabs(RootsG_F[0])]
 		for i in range(2):
 			ABSpos_F[i] = sp.nonzero(En_F == sp.around(ABS_F[i],dE_dec))[0][0]
-			print '# ABSpos:',ABSpos_F
+			#print '# ABSpos:',ABSpos_F
 			Diff_F[i] = DetG.derivatives(ABS_F[i])[1]
-			print '# dD/dw:',Diff_F
+			#print '# dD/dw:',Diff_F
 	elif len(RootsG_F) == 2:	
 		## two ABS states, ideal case
 		ABS_F = sp.zeros(2)
@@ -292,7 +292,7 @@ def FillGreensFunction(params_F,n,mu,SEn_F,SEa_F,En_F):
 	""" calculating the interacting Green's function using the Dyson equation
 	weights of ABS are calculated numerically from determinant, 
 	real parts are recalculated using KK relations """
-	[U,Delta,GammaR,GammaL,GammaN,Phi,eps] = params_F
+	[U,Delta,GammaR,GammaL,GammaN,Phi,eps,h] = params_F
 	hfe = eps+U*(n-0.5)
 	dE = sp.around(En_F[1]-En_F[0],8)
 	dE_dec = int(-sp.log10(dE))
@@ -355,7 +355,7 @@ def MSumsInt(params_F,n,mu,SEn_F,SEa_F,Zn_F):
 	"""	calculating Matsubara sums used in calculating n and mu from interacting GF
 	returning three sums M, n = M[1]/(1-U*M[0]), mu = -M[2]/(1-U*M[0])
 	this approach is numerically more precise than integrating the GF """
-	[U,Delta,GammaR,GammaL,GammaN,Phi,eps] = params_F
+	[U,Delta,GammaR,GammaL,GammaN,Phi,eps,h] = params_F
 	ed = eps-U/2.0
 	dz = sp.around(Zn_F[1] - Zn_F[0],8)
 	#dz_dec = int(-sp.log10(dz))
@@ -437,6 +437,16 @@ def CooperPairDensity(params_F,n,mu,SEn_F,SEa_F,En_F):
 	return sp.real(mu)
 
 
+def JosephsonCurrent(params_F,GFa_F,En_F,ResGa,wzero):
+	[U,Delta,GammaR,GammaL,GammaN,Phi,eps,h] = params_F
+	[EdgePos1,EdgePos2] = FindEdges(En_F,Delta)
+	PreFac = Delta*(GammaL+GammaR)*sp.sin(Phi/2.0)
+	Int_F = sp.real(GFa_F[:EdgePos1])/(sp.sqrt(En_F[:EdgePos1]**2-Delta**2))
+	BandPart = PreFac*simps(Int_F,En_F[:EdgePos1])/sp.pi
+	GapPart  = PreFac*ResGa/sp.sqrt(Delta**2-wzero**2)
+	return sp.array([BandPart,GapPart])
+
+
 def SmoothWings(En_F,X_F,Emax):
 	""" smooths a function on given energy interval, not used anymore """
 	de = sp.around(En_F[1]-En_F[0],8)
@@ -473,4 +483,6 @@ def FitTail(En_F,X_F,Emin,Emax,parity):
 	except RuntimeError:
 		print '# FitTail: Warning: tails cannot be fitted.'
 	return X_F
+
+## squadlib2.py end ##
 

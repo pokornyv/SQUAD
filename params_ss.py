@@ -50,5 +50,5 @@ for sec in config.sections():
 		else:
 			P[opt] = str(config.get(sec,opt))
 
-## params.py end ##
+## params_ss.py end ##
 

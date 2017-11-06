@@ -2,7 +2,7 @@
 
 [params]
 
-M                :  20
+M                :  21
 dE               :  1e-4
 rootf            :  brentq
 ;rootf            :  fixed_point
@@ -18,11 +18,11 @@ offset_x         :  1e-12
 
 WriteIO    	 :  1
 
-Write_HFGF   :  0
+Write_HFGF   :  1
 Write_Bub    :  0
 Write_2ndSE  :  0
 Write_2ndGF  :  1
-Write_AC     :  1
+Write_AC     :  0
 
 EmaxFiles    :  10
 EstepFiles   :  10

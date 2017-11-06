@@ -77,6 +77,19 @@ def FindEdges(En_F,Delta):
 		EdgePos2 = len(En_F)-1
 	return sp.array([EdgePos1,EdgePos2])
 
+
+def Brillouin(J,x):
+	"""	Brillouin function """
+	a = (2.0*J+1.0)/(2.0*J)
+	b = 1.0/(2.0*J)
+	return 0.0 if x == 0.0 else a/sp.tanh(a*x)-b/sp.tanh(x)
+
+
+def Langevin(x):
+	""" Langevin function: classical limit of the J=1/2 Brillouin function """
+	return 0.0 if x == 0.0 else 1.0/sp.tanh(x)-1.0/x
+
+
 #####################################################################
 # dot-lead hybridizations ###########################################
 
@@ -91,18 +104,18 @@ def SFunctionGap(GammaR,GammaL,Delta,x):
 
 
 def DeltaFunctionBand(GammaR,GammaL,Delta,Phi,x):
-	""" anomalous hybridization in band region (imagimary)
+	""" anomalous hybridization in band region (imaginary)
 	PhiC angle helps to keep hybridization real or pure imaginary, not complex
 	the 1e-12 offset allows to calculate normal solution w/o superconduvtivity """
-	PhiC = lambda x: sp.arctan((GammaL-GammaR)/(GammaL+GammaR+1e-12)*sp.tan(Phi/2.0))
-	return 1.0j*sp.sign(x)*Delta*sp.exp(1.0j*PhiC(x))/sp.sqrt(x**2-Delta**2)\
+	PhiC = sp.arctan((GammaL-GammaR)/(GammaL+GammaR+1e-12)*sp.tan(Phi/2.0))
+	return 1.0j*sp.sign(x)*Delta*sp.exp(1.0j*PhiC)/sp.sqrt(x**2-Delta**2)\
 	*(GammaL*sp.exp(-1.0j*Phi/2.0) + GammaR*sp.exp(1.0j*Phi/2.0))
 
 
 def DeltaFunctionGap(GammaR,GammaL,Delta,Phi,x):
 	""" anomalous hybridization in gap region (real) """
-	PhiC = lambda x: sp.arctan((GammaL-GammaR)/(GammaL+GammaR+1e-12)*sp.tan(Phi/2.0))
-	return Delta*sp.exp(1.0j*PhiC(x))/sp.sqrt(Delta**2-x**2)\
+	PhiC = sp.arctan((GammaL-GammaR)/(GammaL+GammaR+1e-12)*sp.tan(Phi/2.0))
+	return Delta*sp.exp(1.0j*PhiC)/sp.sqrt(Delta**2-x**2)\
 	*(GammaL*sp.exp(-1.0j*Phi/2.0) + GammaR*sp.exp(1.0j*Phi/2.0))
 
 
@@ -113,8 +126,8 @@ def SFunctionGapDiff(GammaR,GammaL,Delta,x):
 
 def DeltaFunctionGapDiff(GammaR,GammaL,Delta,Phi,x):
 	""" energy derivative of Delta(w) """
-	PhiC = lambda x: sp.arctan((GammaL-GammaR)/(GammaL+GammaR+1e-12)*sp.tan(Phi/2.0))	
-	return x*Delta*sp.exp(1.0j*PhiC(x))/(Delta**2-x**2)**(3.0/2.0)\
+	PhiC = sp.arctan((GammaL-GammaR)/(GammaL+GammaR+1e-12)*sp.tan(Phi/2.0))	
+	return x*Delta*sp.exp(1.0j*PhiC)/(Delta**2-x**2)**(3.0/2.0)\
 	*(GammaL*sp.exp(-1.0j*Phi/2.0) + GammaR*sp.exp(1.0j*Phi/2.0))
 
 
@@ -127,7 +140,8 @@ def AndreevEnergy(U,GammaR,GammaL,Delta,Phi,hfe,mu):
 	SF = lambda x: SFunctionGap(GammaR,GammaL,Delta,x)
 	DF = lambda x: DeltaFunctionGap(GammaR,GammaL,Delta,Phi,x)
 	eqn = lambda x: sp.sqrt(hfe**2+(DF(x)-U*mu)**2)/(1.0+SF(x))
-	wzero = sp.real_if_close(fixed_point(eqn,0.9*Delta))
+	## change the initial condition if convercence problems raise
+	wzero = sp.real_if_close(fixed_point(eqn,0.999*Delta)) 
 	if sp.imag(wzero) != 0.0:
 		print "# Warning: non-zero Im w0 = "+str(sp.imag(wzero))
 		wzero = sp.real(wzero)
@@ -298,7 +312,7 @@ def SolveHF(Params_F):
 	""" HF equations solver """
 	from scipy.optimize import fixed_point
 	import params_ss as pss
-	[U,Delta,GammaR,GammaL,GammaN,Phi,eps] = Params_F
+	[U,Delta,GammaR,GammaL,GammaN,Phi,eps,h] = Params_F
 	Gamma = (GammaR + GammaL)
 	ed = eps-U/2.0		# localized energy level shifted to symmetry point
 	ErrMsg = 0			# error message indicator
@@ -307,13 +321,15 @@ def SolveHF(Params_F):
 	Emin = -100.0						# lower cutoff for band energy
 	En_F = FillEnergiesLinear(Emin,-Delta,dE)	# [Emin:-Delta)
 	## initial conditions #################################
+	## change these if no convergence is achieved #########
 	n_density = lambda x: 0.5 - sp.arctan((ed+U*x)/Gamma)/sp.pi	# starting from symmetric metallic case
 	n = fixed_point(n_density,0.5)
-	mu = 0.2
+	#n = 0.001
+	mu = 0.01
 	hfe = ed+U*n
 	wzero = AndreevEnergy(U,GammaR,GammaL,Delta,Phi,hfe,mu)
 	if Delta == 0:	# HF solution for SIAM ############################
-		mu = 0.0
+		mu = 0.2
 		wzero = 0.0
 	else:
 		n_old = 1e5
@@ -335,11 +351,15 @@ def SolveHF(Params_F):
 				n = (D2+ed*D1)/(1.0-U*D1)
 			hfe = ed+U*n
 			wzero = AndreevEnergy(U,GammaR,GammaL,Delta,Phi,hfe,mu)
+			#print n,mu,wzero
 			if i > imax: 
 				print "# Warning: SolveHF: No convergence after "+str(i)+" iterations, exit."
 				n = mu = wzero = -1.0
 				ErrMsg = 1	
 				break
+			if sp.imag(mu) != 0.0:
+				print "# Warning: non-zero Im mu = "+str(sp.imag(mu))
+				mu = sp.real(mu)
 			i=i+1
 	if pss.P['WriteIO']: print('#   {0: 3d} iterations,\t n = {1: .6f} +{2: .6f}i,  mu = {3: .6f} +{4: .6f}i'\
 	.format(i,float(sp.real(n)),float(sp.imag(n)),float(sp.real(mu)),float(sp.imag(mu))))
@@ -382,4 +402,6 @@ def FillGreenHF(U,Delta,GammaR,GammaL,hfe,Phi,mu,wzero,En_F):
 	GFn_F[ABSpos2]=-1.0j*ResNp2*sp.pi/dE
 	GFa_F[ABSpos2]=-1.0j*ResA2*sp.pi/dE
 	return [GFn_F,GFa_F,EdgePos1,EdgePos2,ABSpos1,ABSpos2]
+
+## squadlib1.py end ##
 

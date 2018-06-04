@@ -1,6 +1,6 @@
 # SQUAD - superconducting quantum dot
 # reading and parsing parameter file squad.in
-# Vladislav Pokorny, 2016-2018; pokornyv@fzu.cz
+# Vladislav Pokorny, 2012-2018; pokornyv@fzu.cz
 
 import scipy as sp
 from ConfigParser import SafeConfigParser
@@ -21,6 +21,7 @@ P['ConvX']        = 1e-5
 P['ConvHF']       = 1e-6
 P['MuMin']        = -2.0
 P['MuMax']        = 2.0
+P['ABSinit_val']  = 0.999
 P['HF_max_iter']  = 10000
 P['offset_x']     = 1e-12
 
@@ -36,7 +37,7 @@ P['EstepFiles']   = 10
 # read in file ############################################
 
 params_int_L = ['M','HF_max_iter','EstepFiles']
-params_float_L = ['dE','ConvN','ConvX','ConvHF','MuMin','MuMax','offset_x','EmaxFiles']
+params_float_L = ['dE','ConvN','ConvX','ConvHF','MuMin','MuMax','ABSinit_val','offset_x','EmaxFiles']
 params_bool_L = ['WriteIO','Write_HFGF','Write_Bubble','Write_2ndSE','Write_2ndGF']
 
 for sec in config.sections():

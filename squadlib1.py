@@ -1,26 +1,23 @@
-# SQUAD - superconducting quantum dot
-# functions library for general case of asymmetric couplings
-# uses scipy, optimized on Python 2.7.5
-# Vladislav Pokorny, 2012-2016; pokornyv@fzu.cz
+## SQUAD - superconducting quantum dot
+## functions library 1
+## uses scipy, optimized on Python 2.7.5
+## Vladislav Pokorny; 2012-2018; pokornyv@fzu.cz
 
+from __future__ import print_function
 import scipy as sp
 from scipy.integrate import simps
 
 #####################################################################
 # general functions #################################################
 
-HeavisideTheta = lambda x: (sp.sign(x)+1.0)/2.0
-FermiDirac     = lambda E,T: 1.0/(sp.exp((E+1e-12)/T)+1.0)
-BoseEinstein   = lambda E,T: 1.0/(sp.exp((E+1e-12)/T)-1.0)
-
-
-def KondoTemperature(U,Gamma,eps):
-	"""	calculating Kondo temperature sqrt(U*Gamma/2)*exp[pi*abs(U**2-4*eps**2)/(8*U*Gamma)] """
-	if U != 0.0 and Gamma != 0.0:
-		return sp.sqrt(U*Gamma/2.0)*sp.exp(-sp.pi*sp.fabs(U**2-4.0*eps**2)/(8.0*U*Gamma))
-	else:
-		print "# Warning: KondoTemperature: Kondo temperature not defined."
-		return -1.0
+HeavisideTheta   = lambda x: (sp.sign(x)+1.0)/2.0
+FermiDirac       = lambda E,T: 1.0/(sp.exp((E+1e-12)/T)+1.0)
+BoseEinstein     = lambda E,T: 1.0/(sp.exp((E+1e-12)/T)-1.0)
+Brillouin        = lambda J,x: 0.0 if x == 0.0 \
+                   else (2.0*J+1.0)/((2.0*J)*sp.tanh((2.0*J+1.0)/(2.0*J)*x))-1.0/((2.0*J)*sp.tanh(x))
+Langevin         = lambda x: 0.0 if x == 0.0 else 1.0/sp.tanh(x)-1.0/x
+KondoTemperature = lambda U,Gamma,eps: -1.0 if U == 0.0 or Gamma == 0.0 \
+                   else sp.sqrt(U*Gamma/2.0)*sp.exp(-sp.pi*sp.fabs(U**2-4.0*eps**2)/(8.0*U*Gamma))
 
 
 def QParticleResidue(En_F,SE_F):
@@ -39,20 +36,12 @@ def FillEnergiesLinear(Emin,Emax,dE):
 
 
 def FillEnergies(dE,N):
-	"""	return the symmetric array of energies 
-	[Emin,Emin+dE,...,0,...,-Emin-dE,-Emin] of length N """
-	dE_dec = int(-sp.log10(dE))
-	En_F = sp.linspace(-(N-1)/2*dE,(N-1)/2*dE,N)
-	return sp.around(En_F,dE_dec+2)
-
-
-def FillEnergies2(dE,N):
 	"""	return the symmetric array of energies [Emin,Emin+dE,...,-Emin-dE,-Emin] """
 	dE_dec = int(-sp.log10(dE))
 	En_F = sp.concatenate([sp.linspace(-N*dE,-dE,N),sp.linspace(0.0,N*dE,N+1)])
 	return sp.around(En_F,dE_dec+2)
 
-
+'''
 def FindInEnergies(En_F,w):
 	""" return the positions of w in array En_F """
 	dE = sp.around(En_F[1]-En_F[0],8)
@@ -60,9 +49,10 @@ def FindInEnergies(En_F,w):
 	try:
 		Pos = sp.nonzero(En_F == sp.around(w,dE_dec))[0][0]
 	except IndexError:
-		print 'Warning: w not in En_F'
+		print('Warning: w not in En_F, returning zero.')
 		Pos = 0
 	return Pos
+'''
 
 def FindEdges(En_F,Delta):
 	""" return the positions of gap edges \pm\Delta in array En_F
@@ -76,18 +66,6 @@ def FindEdges(En_F,Delta):
 		EdgePos1 = 0
 		EdgePos2 = len(En_F)-1
 	return sp.array([EdgePos1,EdgePos2])
-
-
-def Brillouin(J,x):
-	"""	Brillouin function """
-	a = (2.0*J+1.0)/(2.0*J)
-	b = 1.0/(2.0*J)
-	return 0.0 if x == 0.0 else a/sp.tanh(a*x)-b/sp.tanh(x)
-
-
-def Langevin(x):
-	""" Langevin function: classical limit of the J=1/2 Brillouin function """
-	return 0.0 if x == 0.0 else 1.0/sp.tanh(x)-1.0/x
 
 
 #####################################################################
@@ -134,28 +112,27 @@ def DeltaFunctionGapDiff(GammaR,GammaL,Delta,Phi,x):
 #####################################################################
 # Andreev bound states frequencies ##################################
 
-def AndreevEnergy(U,GammaR,GammaL,Delta,Phi,hfe,mu):
+def AndreevEnergy(U,GammaR,GammaL,Delta,Phi,hfe,mu,init_val):
 	""" returns the ABS frequency in the Hartree-Fock approximation """
 	from scipy.optimize import fixed_point
-	SF = lambda x: SFunctionGap(GammaR,GammaL,Delta,x)
-	DF = lambda x: DeltaFunctionGap(GammaR,GammaL,Delta,Phi,x)
+	SF =  lambda x: SFunctionGap(GammaR,GammaL,Delta,x)
+	DF =  lambda x: DeltaFunctionGap(GammaR,GammaL,Delta,Phi,x)
 	eqn = lambda x: sp.sqrt(hfe**2+(DF(x)-U*mu)**2)/(1.0+SF(x))
-	## change the initial condition if convercence problems raise
-	wzero = sp.real_if_close(fixed_point(eqn,0.999*Delta)) 
+	## change the initial condition init_val if convercence problems raise
+	wzero = sp.real_if_close(fixed_point(eqn,init_val*Delta)) 
 	if sp.imag(wzero) != 0.0:
-		print "# Warning: non-zero Im w0 = "+str(sp.imag(wzero))
+		print("# Warning: non-zero Im w(ABS) = "+str(sp.imag(wzero)))
 		wzero = sp.real(wzero)
-	return wzero	#fixed_point returns numpy.ndarray!
+	return wzero	## caution: fixed_point returns numpy.ndarray
 
 
 #####################################################################
-# Green's function determinants on real axis ########################
+# Green function determinants on real axis ##########################
 
 def DetBand(U,GammaR,GammaL,Delta,Phi,hfe,mu,x):
 	"""	determinant of the HF Green's function in the band region (-inf:-DeltaMax)	"""
 	SF = lambda x: SFunctionBand(GammaR,GammaL,Delta,x)
 	DF = lambda x: DeltaFunctionBand(GammaR,GammaL,Delta,Phi,x)
-	#return x**2*(1.0+SF(x))**2-hfe**2-(DF(x)-U*mu)*(sp.conj(DF(x))-U*mu) #for sp.conj(Delta)!!!
 	return x**2*(1.0+SF(x))**2-hfe**2-(DF(x)-U*mu)**2
 
 
@@ -165,7 +142,6 @@ def DetGap(U,GammaR,GammaL,Delta,Phi,hfe,mu,x):
 	SF = lambda x: SFunctionGap(GammaR,GammaL,Delta,x)
 	DF = lambda x: DeltaFunctionGap(GammaR,GammaL,Delta,Phi,x)
 	return x**2*(1.0+SF(x))**2-hfe**2-(DF(x)-U*mu)*(sp.conj(DF(x))-U*mu) #for sp.conj(Delta)!!!
-	#return x**2*(1.0+SF(x))**2-hfe**2-(DF(x)-U*mu)**2 
 
 
 def DetDiff(U,GammaR,GammaL,Delta,Phi,hfe,mu,x):
@@ -174,12 +150,10 @@ def DetDiff(U,GammaR,GammaL,Delta,Phi,hfe,mu,x):
 	DF = lambda x: DeltaFunctionGap(GammaR,GammaL,Delta,Phi,x)
 	SFD = lambda x: SFunctionGapDiff(GammaR,GammaL,Delta,x)
 	DFD = lambda x: DeltaFunctionGapDiff(GammaR,GammaL,Delta,Phi,x)
-	#return 2.0*x*(1.0+SF(x))**2+2.0*x**2*(1.0+SF(x))*SFD(x)\
-	#-sp.conj(DFD(x))*(DF(x)-U*mu)-DFD(x)*(sp.conj(DF(x))-U*mu) #for sp.conj(Delta)!!!
 	DDf = 2.0*x*(1.0+SF(x))**2+2.0*x**2*(1.0+SF(x))*SFD(x)\
 	-DFD(x)*(DF(x)-U*mu)-DFD(x)*(DF(x)-U*mu)
-	if DDf == 0.0: # some resonance between terms
-		print '# Warning: DetDiff: dD/dw = 0, using value 0.01.'
+	if DDf == 0.0: ## some resonance between terms?
+		print('# Warning: DetDiff: dD/dw = 0, using value 0.01.')
 		DDf = 1e-2
 	return DDf
 
@@ -205,7 +179,6 @@ def GFaBand(U,GammaR,GammaL,Delta,Phi,hfe,mu,x):
 	SF = lambda x: SFunctionBand(GammaR,GammaL,Delta,x)
 	DF = lambda x: DeltaFunctionBand(GammaR,GammaL,Delta,Phi,x)
 	Det = lambda x: DetBand(U,GammaR,GammaL,Delta,Phi,hfe,mu,x)
-	#return -(sp.conj(DF(x))-U*mu)/Det(x) #for sp.conj(Delta)!!!
 	return -(DF(x)-U*mu)/Det(x)
 
 
@@ -214,7 +187,6 @@ def GFaGap(U,GammaR,GammaL,Delta,Phi,hfe,mu,x):
 	SF = lambda x: SFunctionGap(GammaR,GammaL,Delta,x)
 	DF = lambda x: DeltaFunctionGap(GammaR,GammaL,Delta,Phi,x)
 	Det = lambda x: DetGap(U,GammaR,GammaL,Delta,Phi,hfe,mu,x)
-	#return -(sp.conj(DF(x))-U*mu)/Det(x) #for sp.conj(Delta)!!!
 	return -(DF(x)-U*mu)/Det(x)
 
 
@@ -239,7 +211,7 @@ def MSum1(U,Delta,GammaR,GammaL,hfe,Phi,mu,wzero,En_F):
 	Det = lambda x: DetBand(U,GammaR,GammaL,Delta,Phi,hfe,mu,x)
 	Det_F = Det(En_F)
 	Int_F = sp.imag(Det_F)/(Det_F*sp.conj(Det_F))
-	Tail = -Int_F[0]*En_F[0]/2.0	# behaves as -1/x^3 CHECK!!!!
+	Tail = -Int_F[0]*En_F[0]/2.0	## behaves as -1/x^3
 	ContinuumTerm = (simps(Int_F,En_F)+Tail)/sp.pi
 	AndreevTerm = 1.0/DetDiff(U,GammaR,GammaL,Delta,Phi,hfe,mu,-wzero)
 	return sp.real_if_close(ContinuumTerm + AndreevTerm)
@@ -252,7 +224,7 @@ def MSum2(U,Delta,GammaR,GammaL,hfe,Phi,mu,wzero,En_F):
 	Det_F = Det(En_F)
 	Sf_F =  Sf(En_F)
 	Int_F = En_F*(sp.imag(Sf_F)*sp.real(Det_F)-sp.imag(Det_F))/(Det_F*sp.conj(Det_F))
-	Tail = -Int_F[0]*En_F[0]	# behaves as 1/x^2 CHECK!!!!
+	Tail = -Int_F[0]*En_F[0]	## behaves as 1/x^2
 	ContinuumTerm = -(simps(Int_F,En_F)+Tail)/sp.pi
 	AndreevTerm = -wzero*(1.0+SFunctionGap(GammaR,GammaL,Delta,-wzero))\
 	/DetDiff(U,GammaR,GammaL,Delta,Phi,hfe,mu,-wzero)
@@ -265,9 +237,8 @@ def MSum3(U,Delta,GammaR,GammaL,hfe,Phi,mu,wzero,En_F):
 	Del = lambda x: DeltaFunctionBand(GammaR,GammaL,Delta,Phi,x)
 	Delta_F = Del(En_F)
 	Det_F = Det(En_F)
-	#Int_F = -sp.imag(Delta_F)*sp.real(Det_F)/(Det_F*sp.conj(Det_F))	# for sp.conj(Delta)!!!
 	Int_F = sp.imag(Delta_F)*sp.real(Det_F)/(Det_F*sp.conj(Det_F))
-	Tail = -Int_F[0]*En_F[0]/2.0	# behaves as 1/x^3 CHECK!!!!
+	Tail = -Int_F[0]*En_F[0]/2.0	## behaves as 1/x^3
 	ContinuumTerm = -(simps(Int_F,En_F)+Tail)/sp.pi
 	AndreevTerm = DeltaFunctionGap(GammaR,GammaL,Delta,Phi,-wzero)\
 	/DetDiff(U,GammaR,GammaL,Delta,Phi,hfe,mu,-wzero)
@@ -288,10 +259,10 @@ def MSumsHF(U,Delta,GammaR,GammaL,hfe,Phi,mu,wzero,En_F):
 		Int1_F = sp.imag(Det_F)/(Det_F*sp.conj(Det_F))
 		Int2_F = En_F*(sp.imag(Sf_F)*sp.real(Det_F)-sp.imag(Det_F))/(Det_F*sp.conj(Det_F))
 		Int3_F = sp.imag(Delta_F)*sp.real(Det_F)/(Det_F*sp.conj(Det_F))
-		Tail1 = -Int1_F[0]*En_F[0]/2.0	# behaves as -1/x^3 CHECK!!!!
-		Tail2 = -Int2_F[0]*En_F[0]	    # behaves as 1/x^2 CHECK!!!!
-		Tail3 = -Int3_F[0]*En_F[0]/2.0	# behaves as 1/x^3 CHECK!!!!
-		ContTerm1 = (simps(Int1_F,En_F)+Tail1)/sp.pi
+		Tail1 = -Int1_F[0]*En_F[0]/2.0	## behaves as -1/x^3
+		Tail2 = -Int2_F[0]*En_F[0]	    ## behaves as  1/x^2
+		Tail3 = -Int3_F[0]*En_F[0]/2.0	## behaves as  1/x^3
+		ContTerm1 =  (simps(Int1_F,En_F)+Tail1)/sp.pi
 		ContTerm2 = -(simps(Int2_F,En_F)+Tail2)/sp.pi
 		ContTerm3 = -(simps(Int3_F,En_F)+Tail3)/sp.pi
 	else:
@@ -306,37 +277,36 @@ def MSumsHF(U,Delta,GammaR,GammaL,hfe,Phi,mu,wzero,En_F):
 
 
 #####################################################################
-# Hartree-Fock solver ###############################################
+# The Hartree-Fock solver ###########################################
 
 def SolveHF(Params_F):
 	""" HF equations solver """
 	from scipy.optimize import fixed_point
-	import params_ss as pss
+	import params as pss
 	[U,Delta,GammaR,GammaL,GammaN,Phi,eps,h] = Params_F
 	Gamma = (GammaR + GammaL)
-	ed = eps-U/2.0		# localized energy level shifted to symmetry point
-	ErrMsg = 0			# error message indicator
+	ed = eps-U/2.0		## localized energy level shifted to symmetry point
+	ErrMsg = 0			## error message indicator
 	## filling the arrays #################################
-	dE = 1e-4							# band energy sampling
-	Emin = -100.0						# lower cutoff for band energy
-	En_F = FillEnergiesLinear(Emin,-Delta,dE)	# [Emin:-Delta)
+	dE   = 1e-4			## band energy sampling
+	Emin = -100.0		## lower cutoff for band energy
+	En_F = FillEnergiesLinear(Emin,-Delta,dE) ## [Emin:-Delta)
 	## initial conditions #################################
-	## change these if no convergence is achieved #########
-	n_density = lambda x: 0.5 - sp.arctan((ed+U*x)/Gamma)/sp.pi	# starting from symmetric metallic case
+    ## starting from symmetric metallic case and small mu
+	## change these if no convergence is achieved
+	n_density = lambda x: 0.5 - sp.arctan((ed+U*x)/Gamma)/sp.pi	
 	n = fixed_point(n_density,0.5)
-	#n = 0.001
 	mu = 0.01
 	hfe = ed+U*n
-	wzero = AndreevEnergy(U,GammaR,GammaL,Delta,Phi,hfe,mu)
-	if Delta == 0:	# HF solution for SIAM ############################
-		mu = 0.2
+	wzero = AndreevEnergy(U,GammaR,GammaL,Delta,Phi,hfe,mu,pss.P['ABSinit_val'])
+	if Delta == 0:	## HF solution for SIAM
+		mu = 0.2 ## guess 
 		wzero = 0.0
 	else:
 		n_old = 1e5
 		mu_old = 1e5
 		wzero_old = 1e5
-		i = 0			            # iterations counter
-		imax = pss.P['HF_max_iter']	# number of iterations for breaking the cycle
+		i = 0			            ## iterations counter
 		while any([sp.fabs(wzero-wzero_old) > pss.P['ConvHF'],\
 		           sp.fabs(mu-mu_old)       > pss.P['ConvHF'],\
                    sp.fabs(n-n_old)         > pss.P['ConvHF']]):
@@ -350,18 +320,17 @@ def SolveHF(Params_F):
 			else:
 				n = (D2+ed*D1)/(1.0-U*D1)
 			hfe = ed+U*n
-			wzero = AndreevEnergy(U,GammaR,GammaL,Delta,Phi,hfe,mu)
-			#print n,mu,wzero
-			if i > imax: 
-				print "# Warning: SolveHF: No convergence after "+str(i)+" iterations, exit."
+			wzero = AndreevEnergy(U,GammaR,GammaL,Delta,Phi,hfe,mu,pss.P['ABSinit_val'])
+			if i > pss.P['HF_max_iter']: 
+				print("# Warning: SolveHF: No convergence after "+str(i)+" iterations, exit.")
 				n = mu = wzero = -1.0
-				ErrMsg = 1	
+				ErrMsg = 1
 				break
 			if sp.imag(mu) != 0.0:
-				print "# Warning: non-zero Im mu = "+str(sp.imag(mu))
+				print("# Warning: non-zero Im mu = "+str(sp.imag(mu)))
 				mu = sp.real(mu)
 			i=i+1
-	if pss.P['WriteIO']: print('#   {0: 3d} iterations,\t n = {1: .6f} +{2: .6f}i,  mu = {3: .6f} +{4: .6f}i'\
+	if pss.P['WriteIO']: print('# - {0: 3d} iterations,\t n = {1: .6f} +{2: .6f}i,  mu = {3: .6f} +{4: .6f}i'\
 	.format(i,float(sp.real(n)),float(sp.imag(n)),float(sp.real(mu)),float(sp.imag(mu))))
 	return sp.array([n,mu,wzero,ErrMsg])
 

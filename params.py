@@ -1,19 +1,19 @@
 # SQUAD - superconducting quantum dot
-# reading and parsing parameter file ssn.in
-# Vladislav Pokorny, 2016; pokornyv@fzu.cz
+# reading and parsing parameter file squad.in
+# Vladislav Pokorny, 2016-2018; pokornyv@fzu.cz
 
 import scipy as sp
 from ConfigParser import SafeConfigParser
 
 config = SafeConfigParser()
 config.optionxform = str		# case-sensitive names
-config.read('ss.in')
+config.read('squad.in')
 
 P = {}
 
 # default values ##########################################
 
-P['M']            = 21
+P['M']            = 20
 P['dE']           = 1e-4
 P['rootf']        = 'brentq'
 P['ConvN']        = 1e-4

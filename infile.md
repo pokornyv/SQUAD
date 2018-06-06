@@ -15,8 +15,8 @@ File *squad.in* defines parameters used by *secondPT.py* code.
 - ConvHF : convergence criterion for the calculation of n and μ in the Hartree-Fock solution. Default: 1e-6  
 - MuMin : minimum of the separated interval where we search for μ. Used if *rootf=brentq*. Default: -2  
 - MuMax : maximum of the separated interval where we search for μ. Used if *rootf=brentq*. Default:  2  
+- ABSinit_val : initial value to start a fixed-point calculation of the ABS energy is *ABSinit_val x Delta*. Default: 0.99  
 - HF_max_iter : maximum number of iterations for the Hartree-Fock solver. Default: 10000  
-- ABSinit_val : initial value to start a fixed-point calculation of the ABS energy is *ABSinit_val*Delta*. Default: 0.999  
 - offset_x : offset of the energies used to avoid poles in functions (e.g. gap edge). Default: 1e-12  
 
 ### [IO] section
@@ -27,7 +27,7 @@ File *squad.in* defines parameters used by *secondPT.py* code.
 - WriteFile_Bub    :  write the file with HF two-particle bubble  
 - WriteFile_2ndSE  :  write the file with 2nd-order self-energy  
 - WriteFile_2ndGF  :  write the file with 2nd-order Green function  
-  
+Other output parameters:
 - EmaxFiles : maximum of the energy window for output. Default: 10.0  
 - EstepFiles : energy step for output. Values will be written with (EstepFiles x dE) step. Default: 10  
 

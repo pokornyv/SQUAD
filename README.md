@@ -4,12 +4,12 @@ SQUAD
 **SQUAD** (**su**perconducting **qua**ntum **d**ot) is a python2 code to calculate spectral 
 and transport properties of a single-level quantum dot connected to two BCS superconducting (sc) leads.
   
-SQUAD requires SciPy libraries (www.scipy.org) and it was developed and tested using python 2.7.5 and SciPy 0.12.  
+SQUAD requires SciPy libraries (www.scipy.org) and it was developed and tested using python 2.7.5 and SciPy 0.12 and 0.19.  
   
 These codes are subject to changes and require some optimization and cleanup. Please use with caution and at own risk.
 Please check Ref. 1 and 2 before start using the code. In a case you find a bug or need help using the code, 
 please create an issue on GitHub (preffered) or contact me at pokornyv@fzu.cz. Please always include the 
-commit hash prefix (e.g. *8aa17d8*) in all communication. 
+commit hash prefix (e.g. * 7719c9a*) in all communication. 
 
 SQUAD is a free software distributed under the GPL license.
 
@@ -44,9 +44,10 @@ https://github.com/pokornyv/SQUAD
 #### Known issues:
 - Large number of points on the energy axis can lead to `RuntimeWarning: invalid value encountered in power`
 warning. We need large arrays for the Hilbert transform, where it can 
-hit the limit of 2**63 of signed int. Reduce the number of points (*M* in *squad.in*).  
-- If the energy of the Andreev bound state is close to the gap edge Δ, 'AndreevEnergy()' solver
-can fail. Please change the *ABSinit_val* parameter in *squad.in*.  
+hit the limit of 2**63 of signed int. Reduce the number of points (*M* in *squad.in*).
+For most applications, *M=20* with *dE=1e-4* is sufficient to get results correct up to 3 decimal places.  
+- If the energy of the Andreev bound state is close to the gap edge Δ, `AndreevEnergy()` solver
+can fail. Please change the *ABSinit_val* parameter in *squad.in* to some reasonable value.  
 - Close to the 0-π transition, the solver can become unstable as it cannot describe the π-phase.
 Check if the densities n and μ are real numbers and pay attention to warnings. Also, the residues
 may behave erratically.  
@@ -54,24 +55,31 @@ may behave erratically.
 it can end up in an unphysical "false-π" phase. It is marked
 by the change of the sign of the residues in anomalous Green function and (therefore) negative mu. 
 Pay attention to warnings.  
+- There is an instability in the calculation for Φ=π (P=1). Please use e.g. P=0.999 until this issue is solved.
 
 #### TODO list:
-- [ ] include infinite-Delta solution  
-- [ ] include magnetic field to study the splitting of the Andreev states  
+- [ ] Fix the issue at Φ=π.
+- [ ] Include infinite-Delta solution. This requires modifications to the Hartree-Fock solver.  
+- [ ] Include magnetic field to study the splitting of the Andreev states.  
 
 #### few solutions as a benchmark:
 ```
-  U     GammaR  GammaL  eps     Phi/pi  wABS            n               mu              ResGn1          ResGn2          ResGa1
+  U     GammaR  GammaL  eps     Phi/pi  wABS            n               mu              ResGn1          ResGn2          ResGa1          JC
 
-- eps - dependence for U = 1:
- 1.000	 0.500	 0.500	-0.500	 0.500	 0.30510	 0.66949	 0.17922	 0.38401	 0.12737	 0.22118
- 1.000	 0.500	 0.500	 0.000	 0.500	 0.23882	 0.50000	 0.21346	 0.25985	 0.25985	 0.25991
- 1.000	 0.500	 0.500	 0.500	 0.500	 0.30511	 0.33054	 0.17922	 0.12737	 0.38402	 0.22118
+- eps-dependence for U = 1:
+ 1.000	 0.500	 0.500	-1.000	 0.500	 0.45552	 0.76912	 0.12708	 0.40992	 0.06238	 0.15991	 0.08007
+ 1.000	 0.500	 0.500	-0.500	 0.500	 0.30510	 0.66949	 0.17922	 0.38401	 0.12737	 0.22118	 0.11980
+ 1.000	 0.500	 0.500	 0.000	 0.500	 0.23882	 0.50000	 0.21346	 0.25985	 0.25985	 0.25991	 0.14665
+ 1.000	 0.500	 0.500	 0.500	 0.500	 0.30510	 0.33053	 0.17922	 0.12737	 0.38402	 0.22118	 0.11980
+ 1.000	 0.500	 0.500	 1.000	 0.500	 0.45553	 0.23091	 0.12708	 0.06238	 0.40992	 0.15990	 0.08007
 
 - phi-dependence for U = 2:
- 2.000	 0.500	 0.500	 0.000	 0.000	 0.26748	 0.50000	 0.18751	 0.26556	 0.26556	 0.26568
- 2.000	 0.500	 0.500	 0.000	 0.250	 0.22462	 0.50000	 0.18726	 0.26011	 0.26011	 0.26034
- 2.000	 0.500	 0.500	 0.000	 0.500	 0.10833	 0.50000	 0.18640	 0.24832	 0.24832	 0.24966
+ 2.000	 0.500	 0.500	 0.000	 0.000	 0.26748	 0.50000	 0.18751	 0.26556	 0.26556	 0.26568	 0.00000
+ 2.000	 0.500	 0.500	 0.000	 0.100	 0.26048	 0.50000	 0.18744	 0.26459	 0.26459	 0.26473	 0.03046
+ 2.000	 0.500	 0.500	 0.000	 0.200	 0.23982	 0.50000	 0.18731	 0.26191	 0.26191	 0.26210	 0.06045
+ 2.000	 0.500	 0.500	 0.000	 0.300	 0.20659	 0.50000	 0.18706	 0.25793	 0.25793	 0.25823	 0.08988
+ 2.000	 0.500	 0.500	 0.000	 0.400	 0.16218	 0.50000	 0.18678	 0.25330	 0.25330	 0.25387	 0.11852
+ 2.000	 0.500	 0.500	 0.000	 0.500	 0.10833	 0.50000	 0.18638	 0.24830	 0.24830	 0.24964	 0.14626
 ```
 Results may vary slightly, depending on the parameters in *squad.in*.  
 

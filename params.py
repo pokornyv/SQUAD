@@ -1,6 +1,6 @@
-# SQUAD - superconducting quantum dot
-# reading and parsing parameter file squad.in
-# Vladislav Pokorny, 2012-2018; pokornyv@fzu.cz
+## SQUAD - superconducting quantum dot
+## reading and parsing parameter file squad.in
+## Vladislav Pokorny, 2012-2018; pokornyv@fzu.cz
 
 import scipy as sp
 from ConfigParser import SafeConfigParser
@@ -21,7 +21,7 @@ P['ConvX']        = 1e-5
 P['ConvHF']       = 1e-6
 P['MuMin']        = -2.0
 P['MuMax']        = 2.0
-P['ABSinit_val']  = 0.999
+P['ABSinit_val']  = 0.99
 P['HF_max_iter']  = 10000
 P['offset_x']     = 1e-12
 
@@ -30,7 +30,7 @@ P['Write_HFGF']   = 0
 P['Write_Bubble'] = 0
 P['Write_2ndSE']  = 0
 P['Write_2ndGF']  = 1
-P['Write_AC']     = 0
+P['Write_AC']     = 0		## compatibility with ssn codes
 P['EmaxFiles']    = 10.0
 P['EstepFiles']   = 10
 

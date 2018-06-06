@@ -1,6 +1,5 @@
 ## SQUAD - superconducting quantum dot
 ## functions library 1
-## uses scipy, optimized on Python 2.7.5
 ## Vladislav Pokorny; 2012-2018; pokornyv@fzu.cz
 
 from __future__ import print_function
@@ -68,6 +67,20 @@ def FindEdges(En_F,Delta):
 	return sp.array([EdgePos1,EdgePos2])
 
 
+def check_params(params_F):
+	[U,Delta,GammaR,GammaL,GammaN,Phi,eps,GammaN] = params_F
+	X = 0
+	if U<0.0:
+		print('# check_params: Error: U must be positive.')
+		X = 1
+	if Delta<0.0:
+		print('# check_params: Error: Delta must be positive.')
+		X = 1
+	if any([GammaL<0.0,GammaR<0.0,GammaN<0.0]):
+		print('# check_params: Error: Gamma(L,R,N) must be positive.')
+		X = 1
+	if X != 0 : exit()
+
 #####################################################################
 # dot-lead hybridizations ###########################################
 
@@ -120,9 +133,9 @@ def AndreevEnergy(U,GammaR,GammaL,Delta,Phi,hfe,mu,init_val):
 	eqn = lambda x: sp.sqrt(hfe**2+(DF(x)-U*mu)**2)/(1.0+SF(x))
 	## change the initial condition init_val if convercence problems raise
 	wzero = sp.real_if_close(fixed_point(eqn,init_val*Delta)) 
-	if sp.imag(wzero) != 0.0:
+	if sp.fabs(sp.imag(wzero)) > 1e-12:
 		print("# Warning: non-zero Im w(ABS) = "+str(sp.imag(wzero)))
-		wzero = sp.real(wzero)
+	wzero = sp.real(wzero)
 	return wzero	## caution: fixed_point returns numpy.ndarray
 
 
@@ -292,14 +305,14 @@ def SolveHF(Params_F):
 	Emin = -100.0		## lower cutoff for band energy
 	En_F = FillEnergiesLinear(Emin,-Delta,dE) ## [Emin:-Delta)
 	## initial conditions #################################
-    ## starting from symmetric metallic case and small mu
+     ## starting from symmetric metallic case and small mu
 	## change these if no convergence is achieved
 	n_density = lambda x: 0.5 - sp.arctan((ed+U*x)/Gamma)/sp.pi	
 	n = fixed_point(n_density,0.5)
 	mu = 0.01
 	hfe = ed+U*n
 	wzero = AndreevEnergy(U,GammaR,GammaL,Delta,Phi,hfe,mu,pss.P['ABSinit_val'])
-	if Delta == 0:	## HF solution for SIAM
+	if Delta == 0.0:	## HF solution for SIAM
 		mu = 0.2 ## guess 
 		wzero = 0.0
 	else:
@@ -309,14 +322,14 @@ def SolveHF(Params_F):
 		i = 0			            ## iterations counter
 		while any([sp.fabs(wzero-wzero_old) > pss.P['ConvHF'],\
 		           sp.fabs(mu-mu_old)       > pss.P['ConvHF'],\
-                   sp.fabs(n-n_old)         > pss.P['ConvHF']]):
+                     sp.fabs(n-n_old)         > pss.P['ConvHF']]):
 			n_old = n
 			mu_old = mu
 			wzero_old = wzero
 			hfe = ed+U*n
 			[D1,D2,D3] = MSumsHF(U,Delta,GammaR,GammaL,hfe,Phi,mu,wzero,En_F)
 			mu = -D3/(1.0-U*D1)
-			if eps == 0: n = 0.5
+			if eps == 0.0: n = 0.5
 			else:
 				n = (D2+ed*D1)/(1.0-U*D1)
 			hfe = ed+U*n
@@ -326,9 +339,9 @@ def SolveHF(Params_F):
 				n = mu = wzero = -1.0
 				ErrMsg = 1
 				break
-			if sp.imag(mu) != 0.0:
+			if sp.fabs(sp.imag(mu)) > 1e-12:
 				print("# Warning: non-zero Im mu = "+str(sp.imag(mu)))
-				mu = sp.real(mu)
+			mu = sp.real(mu)
 			i=i+1
 	if pss.P['WriteIO']: print('# - {0: 3d} iterations,\t n = {1: .6f} +{2: .6f}i,  mu = {3: .6f} +{4: .6f}i'\
 	.format(i,float(sp.real(n)),float(sp.imag(n)),float(sp.real(mu)),float(sp.imag(mu))))

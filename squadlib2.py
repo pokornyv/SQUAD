@@ -1,6 +1,5 @@
 ## SQUAD - superconducting quantum dot
 ## functions library 2
-## uses scipy, optimized on Python 2.7.5
 ## Vladislav Pokorny; 2012-2018; pokornyv@fzu.cz
 
 from __future__ import print_function
@@ -126,11 +125,11 @@ def SelfEnergy(GFn_F,GFa_F,ChiGamma_F,Zn_F):
 
 def KramersKronigFFT(ImX_F):
 	"""	Hilbert transform used to calculate real part of a function from its imaginary part
-	    uses piecewise cubic interpolated integral kernel of the Hilbert transform
+		uses piecewise cubic interpolated integral kernel of the Hilbert transform
 		assumes that Im X (\infty)=0 
-	    use only if len(ImX_F)=2**m-1, uses fft from scipy.fftpack  """
+		use only if len(ImX_F)=2**m-1 as it uses fft from scipy.fftpack  """
 	N = len(ImX_F)
-	A = sp.array(range(3,N+1),dtype='float64')
+	A = sp.arange(3,N+1,dtype='float64')	## be careful with the data type
 	X1 = 4.0*sp.log(1.5)
 	X2 = 10.0*sp.log(4.0/3.0)-6.0*sp.log(1.5)
 	## filling the kernel
@@ -149,22 +148,22 @@ def KramersKronigFFT(ImX_F):
 
 
 def KramersKronigFFT_ABS(ImX_F,En_F,ABSpos_F,Res_F):
-	""" Hilbert transform used to calculate real part of a function from its imaginary part
+	"""  Hilbert transform used to calculate real part of a function from its imaginary part
 		uses piecewise cubic interpolated integral kernel of the Hilbert transform
 		assumes that Im X (\infty)=0 and there are delta-functions at ABSpos_F
-		1/x polar contributions are then added analytically
-		use only if len(ImX_F)=2**N-1, uses fft from scipy.fftpack  """
+		the 1/x polar contributions are added analytically
+		use only if len(ImX_F)=2**N-1 as it uses fft from scipy.fftpack  """
 	X_F = sp.copy(ImX_F)
 	N = len(X_F)
 	## removing poles from the function
 	if len(ABSpos_F) > 0: 
 		for i in range(len(ABSpos_F)):
-			X_F[ABSpos_F[i]] = 0.0
-	A = sp.array(range(3,N+1))
+			X_F[int(ABSpos_F[i])] = 0.0
+	A = sp.arange(3,N+1,dtype='float64')	## be careful with the data type
 	X1 = 4.0*sp.log(1.5)
 	X2 = 10.0*sp.log(4.0/3.0)-6.0*sp.log(1.5)
 	## filling the kernel	
-	Kernel_F = sp.zeros(N-2)
+	Kernel_F = sp.zeros(N-2,dtype='float64')
 	Kernel_F = (1-A**2)*((A-2)*sp.arctanh(1.0/(1-2*A))+(A+2)*sp.arctanh(1.0/(1+2*A)))\
 	+((A**3-6*A**2+11*A-6)*sp.arctanh(1.0/(3-2*A))+(A+3)*(A**2+3*A+2)*sp.arctanh(1.0/(2*A+3)))/3.0
 	Kernel_F = sp.concatenate([-sp.flipud(Kernel_F),sp.array([-X2,-X1,0.0,X1,X2]),Kernel_F])/sp.pi
@@ -182,7 +181,7 @@ def KramersKronigFFT_ABS(ImX_F,En_F,ABSpos_F,Res_F):
 			exit(-1)
 		for i in range(len(ABSpos_F)):
 			if ABSpos_F[i] != -1: 
-				OneOverX = 1.0/(En_F-En_F[ABSpos_F[i]]+1e-10)
+				OneOverX = 1.0/(En_F-En_F[int(ABSpos_F[i])]+1e-10)
 				ReX_F = ReX_F+Res_F[i]*OneOverX
 	return ReX_F
 
@@ -258,7 +257,7 @@ def FindABS(Det_F,En_F,Delta):
 		## taking two inner poles only
 		ABS_F = sp.array([ABS_F[1],ABS_F[2]])
 		Diff_F = sp.array([Diff_F[1],Diff_F[2]])
-		ABSpos_F = sp.array([ABSpos_F[1],ABSpos_F[2]])
+		ABSpos_F = sp.array([int(ABSpos_F[1]),int(ABSpos_F[2])])
 	else:
 		## this happens when poles are present in DetG and they are fitted in wrong way 
 		## taking two inner poles as ABS
@@ -317,16 +316,16 @@ def FillGreensFunction(params_F,n,mu,SEn_F,SEa_F,En_F):
 		Df_F[i] = DeltaFunctionGap(GammaR,GammaL,Delta,Phi,ABS_F[i])
 		ResGn_F[i] =  sp.real((ABS_F[i]*(1.0+Sf_F[i])+hfe-SigmanStar(ABS_F[i]))/Diff_F[i])
 		ResGa_F[i] = -sp.real((Df_F[i]-U*mu-Sigmaa(ABS_F[i]))/Diff_F[i])
-		GFn_F[ABSpos_F[i]] = -1.0j*ResGn_F[i]*sp.pi/dE
-		GFa_F[ABSpos_F[i]] = -1.0j*ResGa_F[i]*sp.pi/dE
+		GFn_F[int(ABSpos_F[i])] = -1.0j*ResGn_F[i]*sp.pi/dE
+		GFa_F[int(ABSpos_F[i])] = -1.0j*ResGa_F[i]*sp.pi/dE
 	Res_F = sp.concatenate([ResGn_F,ResGa_F])
 	## find real part from imaginary using KK relations
 	GFn_F = KramersKronigFFT_ABS(sp.imag(GFn_F),En_F,ABSpos_F,ResGn_F)+1.0j*sp.imag(GFn_F)
 	GFa_F = KramersKronigFFT_ABS(sp.imag(GFa_F),En_F,ABSpos_F,ResGa_F)+1.0j*sp.imag(GFa_F)
 	## add residues to ABS frequencies
 	for i in range(NABS):
-		GFn_F[ABSpos_F[i]] = -1.0j*ResGn_F[i]*sp.pi/dE
-		GFa_F[ABSpos_F[i]] = -1.0j*ResGa_F[i]*sp.pi/dE
+		GFn_F[int(ABSpos_F[i])] = -1.0j*ResGn_F[i]*sp.pi/dE
+		GFa_F[int(ABSpos_F[i])] = -1.0j*ResGa_F[i]*sp.pi/dE
 	return [GFn_F,GFa_F,Det_F,ABS_F,ABSpos_F,Res_F]
 
 
@@ -376,8 +375,8 @@ def MSumsInt(params_F,n,mu,SEn_F,SEa_F,Zn_F):
 	if len(ABS_F) == 2:
 		Swzero = SFunctionGap(GammaR,GammaL,Delta,ABS_F[0])
 		Dwzero = DeltaFunctionGap(GammaR,GammaL,Delta,Phi,ABS_F[0])
-		Res2 = ABS_F[0]*(1.0+Swzero)+ed-SEnStar_F[ABSpos_F[0]]
-		Res3 = Dwzero-SEa_F[ABSpos_F[0]]
+		Res2 = ABS_F[0]*(1.0+Swzero)+ed-SEnStar_F[int(ABSpos_F[0])]
+		Res3 = Dwzero-SEa_F[int(ABSpos_F[0])]
 		MSum1R = -(trapz(Int1_F,Band_F)+Head1+Tail1)/sp.pi+1.0/Diff_F[0]
 		MSum2R = -(trapz(Int2_F,Band_F)+Head2+Tail2)/sp.pi+Res2/Diff_F[0]
 		MSum3R = -(trapz(Int3_F,Band_F)+Head3+Tail3)/sp.pi+Res3/Diff_F[0]
@@ -391,10 +390,10 @@ def MSumsInt(params_F,n,mu,SEn_F,SEa_F,Zn_F):
 		Swzero2 = SFunctionGap(GammaR,GammaL,Delta,ABS_F[1])
 		Dwzero1 = DeltaFunctionGap(GammaR,GammaL,Delta,Phi,ABS_F[0])
 		Dwzero2 = DeltaFunctionGap(GammaR,GammaL,Delta,Phi,ABS_F[1])
-		Res21 = ABS_F[0]*(1.0+Swzero1)+ed-SEnStar_F[ABSpos_F[0]]
-		Res22 = ABS_F[1]*(1.0+Swzero2)+ed-SEnStar_F[ABSpos_F[1]]
-		Res31 = Dwzero1-SEa_F[ABSpos_F[0]]
-		Res32 = Dwzero2-SEa_F[ABSpos_F[1]]
+		Res21 = ABS_F[0]*(1.0+Swzero1)+ed-SEnStar_F[int(ABSpos_F[0])]
+		Res22 = ABS_F[1]*(1.0+Swzero2)+ed-SEnStar_F[int(ABSpos_F[1])]
+		Res31 = Dwzero1-SEa_F[(ABSpos_F[0])]
+		Res32 = Dwzero2-SEa_F[(ABSpos_F[1])]
 		MSum1R = -(trapz(Int1_F,Band_F)+Head1+Tail1)/sp.pi+1.0/Diff_F[0]+1.0/Diff_F[1]
 		MSum2R = -(trapz(Int2_F,Band_F)+Head2+Tail2)/sp.pi+Res21/Diff_F[0]+Res22/Diff_F[1]
 		MSum3R = -(trapz(Int3_F,Band_F)+Head3+Tail3)/sp.pi+Res31/Diff_F[0]+Res32/Diff_F[1]
@@ -426,7 +425,9 @@ def JosephsonCurrent(params_F,GFa_F,En_F,ResGa,wzero):
 	[EdgePos1,EdgePos2] = FindEdges(En_F,Delta)
 	PreFac   = Delta*(GammaL+GammaR)*sp.sin(Phi/2.0)
 	Int_F    = sp.real(GFa_F[:EdgePos1])/(sp.sqrt(En_F[:EdgePos1]**2-Delta**2))
-	BandPart = PreFac*simps(Int_F,En_F[:EdgePos1])/sp.pi
+	if Delta < sp.fabs(En_F[0]):	## finite gap
+		BandPart = PreFac*simps(Int_F,En_F[:EdgePos1])/sp.pi
+	else: BandPart = 0.0
 	GapPart  = PreFac*ResGa/sp.sqrt(Delta**2-wzero**2)
 	return sp.array([BandPart,GapPart])
 

@@ -40,8 +40,8 @@ def WriteFile(En_F,Xn_F,Xa_F,params_F,pole_pos,f_type,Emax,NE):
 	for k in range(len(En_F[kmin:kmax])):
 		if any([k%NE == 0,k == xzeroPos1-kmin,k == xzeroPos2-kmin]):
 			gline = '{0:.5f}\t{1:.8f}\t{2:.8f}\t{3:.8f}\t{4:.8f}'\
-			.format(sp.float32(En_F[k+kmin]),sp.float32(sp.real(Xn_F[k+kmin])),sp.float32(sp.imag(Xn_F[k+kmin]))\
-			,sp.float32(sp.real(Xa_F[k+kmin])),sp.float32(sp.imag(Xa_F[k+kmin])))+'\n'
+			.format(float(En_F[k+kmin]),float(sp.real(Xn_F[k+kmin])),float(sp.imag(Xn_F[k+kmin]))\
+			,float(sp.real(Xa_F[k+kmin])),float(sp.imag(Xa_F[k+kmin])))+'\n'
 			f.write(gline)	
 	f.close()
 
@@ -406,7 +406,7 @@ def ElectronDensity(params_F,n,mu,SEn_F,SEa_F,En_F):
 	U = params_F[0]
 	MSums_F = MSumsInt(params_F,n,mu,SEn_F,SEa_F,En_F)
 	n = sp.real_if_close(MSums_F[1]/(1.0 - U*MSums_F[0]))
-	if sp.imag(n) > 0.0: print('# Warning: non-zero imag. part of n: {0: .8f}'.format(float(sp.imag(n))))
+	if sp.fabs(sp.imag(n)) > 1e-12: print('# Warning: non-zero imag. part of n: {0: .5e}'.format(float(sp.imag(n))))
 	return sp.real(n)
 
 
@@ -415,7 +415,7 @@ def CooperPairDensity(params_F,n,mu,SEn_F,SEa_F,En_F):
 	U = params_F[0]
 	MSums_F = MSumsInt(params_F,n,mu,SEn_F,SEa_F,En_F)
 	mu =  sp.real_if_close(-MSums_F[2]/(1.0 - U*MSums_F[0]))
-	if sp.imag(mu) > 0.0: print('# Warning: non-zero imag. part of mu: {0: .8f}'.format(float(sp.imag(mu))))
+	if sp.fabs(sp.imag(mu)) > 1e-12: print('# Warning: non-zero imag. part of mu: {0: .5e}'.format(float(sp.imag(mu))))
 	return sp.real(mu)
 
 

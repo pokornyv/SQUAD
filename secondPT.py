@@ -153,11 +153,11 @@ SEaABS = sp.real(Sigmaa_F[int(ABSpos_F[0])])
 if chat: print('# - self-energies at ABS: SEn = {0: .5f}, SEa = {1: .5f}'.format(float(SEnABS),float(SEaABS)))
 JC_F = JosephsonCurrent(params_F,GFa_F,En_F,Res_F[2],wzeroInt)
 JC = JC_F[0]+JC_F[1] ## total current
-print('# - Josephson current: band: {0: .5f}, gap: {1: .5f}, total: {2: .5f}'.format(float(JC_F[0]),float(JC_F[1]),float(JC)))
-print('# U     GammaR  GammaL  eps     Phi/pi  wABS'+' '*12+'n'+' '*15+'mu'\
+if chat: print('# - Josephson current: band: {0: .5f}, gap: {1: .5f}, total: {2: .5f}'.format(float(JC_F[0]),float(JC_F[1]),float(JC)))
+if chat: print('# U     Delta   GammaR  GammaL  eps     Phi/pi  wABS'+' '*12+'n'+' '*15+'mu'\
 +' '*14+'ResGn1'+' '*10+'ResGn2'+' '*10+'ResGa1'+' '*10+'JC')
-print('{0: .3f}\t{1: .3f}\t{2: .3f}\t{3: .3f}\t{4: .3f}\t{5: .5f}\t{6: .5f}\t{7: .5f}\t{8: .5f}\t{9: .5f}\t{10: .5f}\t{11: .5f}'\
-.format(U,GammaR,GammaL,eps,P,float(wzeroInt),float(n),float(mu),Res_F[0],Res_F[1],Res_F[2],float(JC)))
+print('{0: .3f}\t{1: .3f}\t{2: .3f}\t{3: .3f}\t{4: .3f}\t{5: .3f}\t{6: .5f}\t{7: .5f}\t{8: .5f}\t{9: .5f}\t{10: .5f}\t{11: .5f}\t{12: .5f}'\
+.format(U,Delta,GammaR,GammaL,eps,P,float(wzeroInt),float(n),float(mu),Res_F[0],Res_F[1],Res_F[2],float(JC)))
 
 ## secondPT.py end ##
 

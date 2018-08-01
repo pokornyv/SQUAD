@@ -28,7 +28,7 @@ https://github.com/pokornyv/SQUAD
 #### Usage:
 - Modify parameters in *squad.in*, if needed. The default values are sufficient for most cases.  
 - Run `python secondPT.py <float U> <float Δ> <float ΓR> <float ΓLR> <float ε> <float P>`  
-where *python* is the alias for the python 2 interpreter, ΓLR is GammaL/GammaR, 
+where *python* is the alias for the python 2 interpreter, ΓLR is ΓL/ΓR, 
 ε is the local energy (gate voltage) w.r.t. half-filling (so ε=0 represents a half-filled dot) and P=Φ/π.  
 - Check standard output for the solution. Parameters like ABS energy, densities n=\<d\+d\> and μ=\<d\+d\+\>, 
 ABS residues and the supercurrent are printed.  

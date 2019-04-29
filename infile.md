@@ -27,6 +27,7 @@ File *squad.in* defines parameters used by *secondPT.py* code.
 - WriteFile_Bub    :  write *HF_bubbles.dat* file with HF two-particle bubble  
 - WriteFile_2ndSE  :  write *2nd_SE.dat* file with 2nd-order self-energy  
 - WriteFile_2ndGF  :  write *2nd_green.dat* file with 2nd-order Green function  
+
 Other output parameters:
 - EmaxFiles : maximum of the energy window for output. Default: 20.0  
 - EstepFiles : energy step for output. Values will be written with (EstepFiles x dE) step. Default: 10  

@@ -227,6 +227,7 @@ def FillGreensFunction(n,mu,SEn_A,SEa_A):
 	[GFn3_A,GFa3_A,Det3_A] = GreensFunction(n,mu,SEn_A[EdgePos2+1:],SEa_A[EdgePos2+1:],\
 		SEnStar_A[EdgePos2+1:],SEaStar_A[EdgePos2+1:],En_A[EdgePos2+1:],'band')
 	Det_A = sp.concatenate([Det1_A,sp.zeros(1),Det2_A,sp.zeros(1),Det3_A])
+	#WriteFile(Det_A,Det_A,0.0,'2nd_det')
 	## splines to determine the value of self-energy at ABS
 	SigmanStar = InterpolatedUnivariateSpline(En_A[EdgePos1+1:EdgePos2],sp.real(SEnStar_A[EdgePos1+1:EdgePos2]))
 	Sigmaa     = InterpolatedUnivariateSpline(En_A[EdgePos1+1:EdgePos2],sp.real(SEa_A[EdgePos1+1:EdgePos2]))
@@ -310,7 +311,7 @@ def ElectronDensity(n,mu,SEn_A,SEa_A):
 	if sp.fabs(sp.imag(n)) > 1e-12:
 		print('# - Warning: ElectronDensity: non-zero imag. part of n: {0: .5e}'\
 		.format(float(sp.imag(n))))
-	return sp.real(n)
+	return sp.float64(sp.real(n))
 
 
 def CooperPairDensity(n,mu,SEn_A,SEa_A):
@@ -320,7 +321,7 @@ def CooperPairDensity(n,mu,SEn_A,SEa_A):
 	if sp.fabs(sp.imag(mu)) > 1e-12: 
 		print('# - Warning: CooperPairDensity: non-zero imag. part of mu: {0: .5e}'\
 		.format(float(sp.imag(mu))))
-	return sp.real(mu)
+	return sp.float64(sp.real(mu))
 
 
 def JosephsonCurrent(GFa_A,ResGa,wzero):
@@ -329,7 +330,7 @@ def JosephsonCurrent(GFa_A,ResGa,wzero):
 	Int_A  = sp.real(GFa_A[:EdgePos1])/(sp.sqrt(En_A[:EdgePos1]**2-Delta**2))
 	JCband = PreFac*simps(Int_A,En_A[:EdgePos1])/sp.pi
 	JCgap  = PreFac*ResGa/sp.sqrt(Delta**2-wzero**2)
-	return sp.array([JCband,JCgap])
+	return [JCband,JCgap]
 
 '''
 def KramersKronigFFT_ABS(ImX_A,ABSpos_A,Res_A):

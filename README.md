@@ -5,13 +5,13 @@ SQUAD
 and transport properties of a single-level quantum dot connected to two BCS superconducting (sc) leads
 using second-order perturbation theory (2ndPT) as described in Refs. [1-2].
   
-SQUAD requires SciPy [SciPy](https://www.scipy.org) libraries and it was developed and 
+SQUAD requires [SciPy](https://www.scipy.org) libraries and it was developed and 
 tested using python 2.7.5 and SciPy 0.19 and 1.1.
   
 Theis codes is subject to constant changes and optimization. Please use at own risk.
 Please consult Ref. [1-2] before using the code. In a case you find a bug or need help using the code, 
 please create an issue on GitHub (preffered) or contact me at pokornyv@fzu.cz. Please always include the 
-commit hash prefix (e.g. *7719c9a*) in all communication.
+commit hash prefix (e.g. *78ebd43*) in all communication.
 
 Please cite Ref. [1] and/or [2] when publishing data calculated using SQUAD.
 
@@ -31,9 +31,10 @@ SQUAD is a free software distributed under the GPL license.
 
 #### Usage:
 - Modify parameters in *squad.in*, if needed. The default values are sufficient for most cases.  
-- Run `python secondPT.py <U> <Δ> <ΓR> <ΓLR> <ε> <P>`  
-where *python* is the alias for the python 2 interpreter, ΓLR is ΓL/ΓR, 
-ε is the local energy (gate voltage) w.r.t. half-filling (so ε=0 represents a half-filled dot) and P=Φ/π.  
+- Run `python secondPT.py <U> <Δ> <ΓR> <a> <ε> <P>`  
+where *python* is the alias for the python 2 interpreter, U is the interaction strength, Δ the superconducting gap,
+ΓR coupling to the right electrode, a marks the ratio ΓL/ΓR, ε is the local energy (gate voltage) w.r.t. half-filling 
+(therefore ε=0 represents a half-filled dot) and P=Φ/π is the phase difference.  
 - Check standard output for the solution. Parameters like ABS energy, densities n=\<d\+d\> and μ=\<d\+d\+\>, 
 ABS residues and the supercurrent are printed.  
 - The Green function and the self-energy can be printed to files (check \[IO\] section of *squad.in* for details).  
@@ -55,7 +56,8 @@ by *EmaxFiles* and *EstepFiles* flags in *squad.in*.
 
 - *HF_green.dat* - Hartree-Fock Green function, set flag *Write_HFGF : 1*  
 - *HF_bubbles.dat* - Hartree-Fock bubbles, set flag *Write_Bubble : 1*  
-- *2nd_SE.dat* - 2ndPT dynamic self-energy, set flag *Write_2ndSE : 1* Static (HF) parts must be added by hand to real parts.  
+- *2nd_SE.dat* - 2ndPT dynamic self-energy, set flag *Write_2ndSE : 1* Static parts Un and Uμ should 
+be added by hand to the real parts.  
 - *2nd_green.dat* - 2ndPT Green function, set flag *Write_2ndGF : 1*  
 
 #### Known issues:
@@ -68,12 +70,12 @@ can fail. Please change the *ABSinit_val* parameter in *squad.in* to some reason
 Check if the densities n and μ are real numbers and pay attention to warnings. Also, the residues
 may behave erratically, having negative effect on the Josephson current and the densities n and μ.  
 - Beyond the 0-π transition, the solver gives zero ABS energies or it can end up in an unphysical "false-π" phase. It is marked
-by the change of the sign of the residues in anomalous Green function and (therefore) negative μ. 
+by the change of the sign of the residues in anomalous Green function and, therefore, negative μ.
 Pay attention to warnings.  
 - There is an instability in the calculation for Φ=π (P=1). Please use e.g. P=0.999 until this issue is solved.
 
 #### TODO list:
-- [x] Fix the instability in calculating residues close to the quantum phase transition.
+- [x] Fix the instability in calculating residues close to the quantum phase transition.  
 - [ ] Fix the instability at Φ=π.  
 - [ ] Include magnetic field to study the splitting of the Andreev bound states.  
 

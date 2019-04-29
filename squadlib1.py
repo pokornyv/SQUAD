@@ -113,8 +113,7 @@ def AndreevEnergy(hfe,mu):
 	wzero = sp.real_if_close(fixed_point(eqn,ABSinit_val*Delta))
 	if sp.fabs(sp.imag(wzero)) > 1e-12:
 		print("# - Warning: AndreevEnergy: Non-zero Im w(ABS) = {0: .5e}".format(sp.imag(wzero)))
-	wzero = sp.real(wzero)
-	return wzero	## caution: fixed_point returns numpy.ndarray
+	return sp.float64(sp.real(wzero))	## caution: fixed_point returns numpy.ndarray
 
 #####################################################################
 # Green function determinants #######################################

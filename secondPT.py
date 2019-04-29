@@ -134,7 +134,6 @@ SEaABS = sp.real(Sigmaa_A[int(ABSpos_A[0])])
 ## Josephson current ##################
 JC_A = JosephsonCurrent(GFa_A,Res_A[2],wzeroInt)
 JC = JC_A[0]+JC_A[1]
-
 ## writing the results ################
 if chat: 
 	print('# - final densities: n ={0: .5f}, mu ={1: .5f}'.format(n_final,mu_final))
@@ -157,6 +156,7 @@ print('{0: .3f}\t{1: .3f}\t{2: .3f}\t{3: .3f}\t{4: .3f}\t{5: .3f}\t{6: .5f}\
 \t{7: .5f}\t{8: .5f}\t{9: .5f}\t{10: .5f}\t{11: .5f}\t{12: .5f}'\
 .format(U,Delta,GammaR,GammaL,eps,P,wzeroInt,n,mu,Res_A[0],Res_A[1],Res_A[2],JC))
 #print('{0: .3f}\t{1: .5f}\t{2: .5f}\t{3: .5f}'.format(P,JC_A[0],JC_A[1],JC))
+#print('{0: .3f}\t{1: .5f}\t{2: .5f}'.format(U,SEnABS,SEaABS))
 if chat: print('# '+argv[0]+' DONE after {0: .2f} seconds.'.format(time()-t))
 
 ## secondPT.py end ##

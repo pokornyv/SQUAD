@@ -24,7 +24,7 @@ GammaR = float(argv[3])
 GammaL = float(argv[4])*GammaR
 eps    = float(argv[5])
 P      = float(argv[6])
-GammaN = 0.0 	 ## for compatibility with functions from SSN branch (not on GitHub)
+GammaN = 0.0 	 ## for compatibility with functions from SSN branch (not in GitHub master branch)
 
 ## little post-processing
 ed       = eps-U/2.0                               ## energy level shifted to symmetry point

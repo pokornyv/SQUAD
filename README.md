@@ -11,7 +11,8 @@ tested using python 2.7.5 and SciPy 0.19 and 1.1.
 Theis codes is subject to constant changes and optimization. Please use at own risk.
 Please consult Ref. [1-2] before using the code. In a case you find a bug or need help using the code, 
 please create an issue on GitHub (preffered) or contact me at pokornyv@fzu.cz. Please always include the 
-commit hash prefix (e.g. *78ebd43*) in all communication.
+commit hash prefix (e.g. *78ebd43*, the hexadecimal number after "Latest commit", 
+just below the green "Clone or download" button) in all communication.
 
 Please cite Ref. [1] and/or [2] when publishing data calculated using SQUAD.
 

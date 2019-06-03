@@ -128,14 +128,14 @@ Nhalf  = int((len(En_A)-1)/2)	## zero on the energy axis
 ## cannot print what is not calculated
 if EmaxFiles > sp.fabs(En_A[0]): EmaxFiles = sp.fabs(En_A[0])  
 
-if any([GammaL < 0.0,GammaR < 0.0, U < 0.0, Delta <=0.0]):
+if any([GammaL <= 0.0,GammaR <= 0.0, U < 0.0, Delta <= 0.0]):
 	print('# check_params: Error: All of GammaL, GammaR, U, Delta must be positive.')
-	exit()
+	exit(1)
 
 if Delta > En_A[-1]:
 	print('# Error: Delta must be smaller than the bandwidth.')
 	print('# Delta = {0: .5f}, Emax = {1: .5f}'.format(Delta,En_A[-1]))
-	exit()
+	exit(1)
 
 ## locate band edges in En_A
 EdgePos1 = sp.nonzero(sp.around(En_A,dE_dec) == sp.around(-Delta,dE_dec))[0][0]
